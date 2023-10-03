@@ -1,0 +1,7 @@
+---
+projects:
+  vst:
+    repository: some/repo
+    branch: main
+    paths:
+      deigmata_vscode: /home/quatters/Coding/vst/deigmata/.vscode

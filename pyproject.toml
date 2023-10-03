@@ -1,0 +1,107 @@
+[tool.poetry]
+name = "config-keeper2"
+version = "1.0.0a1"
+description = "CLI tool for keeping your personal config files in repository"
+authors = ["Vladislav Korenkov <vladnfs3@gmail.com>"]
+readme = "README.md"
+license = "GPL-3.0-only"
+repository = "https://github.com/Quatters/config-keeper"
+packages = [
+    { include = "config_keeper" }
+]
+classifiers = [
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Intended Audience :: End Users/Desktop",
+    "Environment :: Console",
+    "Development Status :: 3 - Alpha",
+    "Operating System :: Unix",
+    "Operating System :: POSIX",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Framework :: Pytest",
+    "Framework :: Flake8",
+    "Typing :: Typed",
+]
+
+[tool.poetry.scripts]
+config-keeper = { reference = "config_keeper.commands:cli", type = "console" }
+
+[tool.poetry.urls]
+"Issue Tracker" = "https://github.com/Quatters/config-keeper/issues"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+typer = { extras = ["all"], version = "^0.9.0" }
+rich = "^13.5.3"
+requests = "^2.31.0"
+pyyaml = "^6.0.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.2"
+pytest-cov = "^4.1.0"
+ruff = "^0.0.291"
+freezegun = "^1.2.2"
+
+[tool.ruff]
+select = [
+    'ANN',
+    'B',
+    'C4',
+    'COM',
+    'E',
+    'EM',
+    'ERA',
+    'FIX',
+    'FLY',
+    'F',
+    'I',
+    'ISC',
+    'ICN',
+    'INP',
+    'N',
+    'PIE',
+    'PT',
+    'PTH',
+    'PL',
+    'PYI',
+    'T20',
+    'Q',
+    'RET',
+    'SIM',
+    'SLOT',
+    'TCH',
+    'TID',
+    'TRY',
+    'UP',
+]
+line-length = 80
+target-version = 'py311'
+ignore = ["ANN101", "PLR0913"]
+src = ["config_keeper", "tests"]
+fixable = ['ALL']
+
+[tool.ruff.extend-per-file-ignores]
+"test_*" = ["PLR2004"]
+
+[tool.ruff.flake8-quotes]
+inline-quotes = "single"
+
+[tool.ruff.flake8-annotations]
+suppress-none-returning = true
+
+[tool.coverage.run]
+include = ["config_keeper/*"]
+
+[tool.coverage.report]
+fail_under = 100
+exclude_lines = ["# nocv"]
+show_missing = true
+skip_covered = true
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
