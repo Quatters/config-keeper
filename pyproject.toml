@@ -37,7 +37,6 @@ config-keeper = { reference = "config_keeper.commands:cli", type = "console" }
 python = "^3.11"
 typer = { extras = ["all"], version = "^0.9.0" }
 rich = "^13.5.3"
-requests = "^2.31.0"
 pyyaml = "^6.0.1"
 
 [tool.poetry.group.dev.dependencies]
