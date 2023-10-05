@@ -6,6 +6,7 @@ import typer
 
 from config_keeper import config
 from config_keeper import exceptions as exc
+from config_keeper.commands import helps
 from config_keeper.console_helpers import print_project_saved
 from config_keeper.validation import check_if_project_exists
 
@@ -14,12 +15,32 @@ cli = typer.Typer()
 
 path_arg_regex = re.compile(r'(^[\w-]+):([\w\/~\-\. ]+$)')
 
+overwrite_help = """
+    If set, overwrite path names if project already has them. Fail otherwise.
+"""
+paths_help = """
+    Path list with following syntax: path_name:/path/to/file/or/dir. Path names
+    of each project must be unique as it will be used as temporary file
+    (directory) name for storing it in repository. Path after colon is any
+    path to file (directory) in your filesystem.
+"""
+path_names_help = """
+    Path names of project.
+"""
+ignore_missing_help = """
+    If set, path names that are not exist in project will be ignored. Fail
+    otherwise.
+"""
+
 
 @cli.command()
 def add(
-    project: t.Annotated[str, typer.Option()],
-    paths: t.List[str],  # noqa: UP006
-    overwrite: t.Annotated[bool, typer.Option()] = False,
+    project: t.Annotated[str, typer.Option(help=helps.project)],
+    paths: t.Annotated[
+        t.List[str],  # noqa: UP006
+        typer.Argument(help=paths_help),
+    ],
+    overwrite: t.Annotated[bool, typer.Option(help=overwrite_help)] = False,
 ):
     """
     Add directories or files to project. They will be pushed to (and pulled
@@ -59,9 +80,15 @@ def add(
 
 @cli.command()
 def delete(
-    project: t.Annotated[str, typer.Option()],
-    path_names: t.List[str],  # noqa: UP006
-    ignore_missing: t.Annotated[bool, typer.Option()] = False,
+    project: t.Annotated[str, typer.Option(help=helps.project)],
+    path_names: t.Annotated[
+        t.List[str],   # noqa: UP006
+        typer.Argument(help=path_names_help),
+    ],
+    ignore_missing: t.Annotated[
+        bool,
+        typer.Option(help=ignore_missing_help),
+    ] = False,
 ):
     """
     Delete paths by their keys from project. This will not affect original

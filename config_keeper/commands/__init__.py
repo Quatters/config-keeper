@@ -14,9 +14,9 @@ from config_keeper.validation import ProjectValidator
 
 cli = typer.Typer()
 
-cli.add_typer(project_cli, name='project')
-cli.add_typer(config_cli, name='config')
-cli.add_typer(paths_cli, name='paths')
+cli.add_typer(project_cli, name='project', help='Manage projects.')
+cli.add_typer(config_cli, name='config', help='Manage config of this tool.')
+cli.add_typer(paths_cli, name='paths', help='Manage project paths.')
 
 
 @cli.command()

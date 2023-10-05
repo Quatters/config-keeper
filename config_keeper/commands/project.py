@@ -6,6 +6,7 @@ import yaml
 
 from config_keeper import config, console, settings
 from config_keeper import exceptions as exc
+from config_keeper.commands import helps
 from config_keeper.console_helpers import print_error, print_project_saved
 from config_keeper.validation import check_if_project_exists, ping_remote
 
@@ -14,13 +15,16 @@ cli = typer.Typer()
 
 @cli.command()
 def create(
-    project: str,
+    project: t.Annotated[str, typer.Argument(help=helps.project)],
     repository: t.Annotated[
-        t.Optional[str],  # noqa: UP007
-        typer.Option(prompt=True),
+        str,
+        typer.Option(prompt=True, help=helps.repository),
     ],
-    branch: t.Annotated[str, typer.Option(prompt=True)] = 'main',
-    check: t.Annotated[bool, typer.Option()] = True,
+    branch: t.Annotated[
+        str,
+        typer.Option(prompt=True, help=helps.branch),
+    ] = 'main',
+    check: t.Annotated[bool, typer.Option(help=helps.check)] = True,
 ):
     """
     Create a new project.
@@ -48,13 +52,16 @@ def create(
 
 @cli.command()
 def update(
-    project: str,
+    project: t.Annotated[str, typer.Argument(help=helps.project)],
     repository: t.Annotated[
         t.Optional[str],  # noqa: UP007
-        typer.Option(),
+        typer.Option(help=helps.repository),
     ] = None,
-    branch: t.Annotated[t.Optional[str], typer.Option()] = None,  # noqa: UP007
-    check: t.Annotated[bool, typer.Option()] = True,
+    branch: t.Annotated[
+        t.Optional[str],  # noqa: UP007
+        typer.Option(help=helps.branch),
+    ] = None,
+    check: t.Annotated[bool, typer.Option(help=helps.check)] = True,
 ):
     """
     Update project.
@@ -85,8 +92,11 @@ def update(
 
 @cli.command()
 def delete(
-    project: str,
-    confirm: t.Annotated[bool, typer.Option()] = True,
+    project: t.Annotated[str, typer.Argument(help=helps.project)],
+    confirm: t.Annotated[
+        bool,
+        typer.Option(help='Whether confirm before deleting.'),
+    ] = True,
 ):
     """
     Delete project.
@@ -107,9 +117,9 @@ def delete(
 
 
 @cli.command()
-def show(project: str):
+def show(project: t.Annotated[str, typer.Argument(help=helps.project)]):
     """
-    Show project's config.
+    Show project config.
     """
 
     conf = config.load()
@@ -121,7 +131,10 @@ def show(project: str):
 
 @cli.command(name='list')
 def list_(
-    verbose: t.Annotated[bool, typer.Option('--verbose', '-v')] = False,
+    verbose: t.Annotated[
+        bool,
+        typer.Option('--verbose', '-v', help=helps.verbose),
+    ] = False,
 ):
     """
     List all projects.
