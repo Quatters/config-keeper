@@ -193,9 +193,8 @@ def test_executable_not_found():
         sync_handler_run_cmd([executable, 'some'])
 
 
-def test_pull():
+def test_pull_overwrites_original_files():
     repo = create_repo()
-
     source_dir = create_dir()
 
     config.save({
@@ -227,7 +226,7 @@ def test_pull():
     run_cmd(['git', '-C', str(repo), 'add', '.'])
     run_cmd(['git', '-C', str(repo), 'commit', '-m', 'some message'])
 
-    result = invoke(['pull', 'test1'])
+    result = invoke(['pull', 'test1', '--no-ask'])
     assert result.exit_code == 0
     assert result.stdout.endswith('Operation successfully completed.\n')
 
@@ -253,7 +252,7 @@ def test_pull():
     file_must_be_deleted = (source_dir / 'some_dir' / 'file_must_be_deleted')
     file_must_be_deleted.touch()
 
-    result = invoke(['pull', 'test1'])
+    result = invoke(['pull', 'test1', '--no-ask'])
     assert result.exit_code == 0
     assert result.stdout.endswith('Operation successfully completed.\n')
 
@@ -263,3 +262,48 @@ def test_pull():
         'new_content'
     )
     assert (source_dir / 'some_dir' / 'some_dir_file').is_file()
+
+
+def test_pull_with_ask():
+    repo = create_repo()
+    source_dir = create_dir()
+
+    config.save({
+        'projects': {
+            'test1': {
+                'repository': str(repo),
+                'branch': 'my_branch',
+                'paths': {
+                    'some_file': str(source_dir  / 'some_file'),
+                },
+            },
+        },
+    })
+
+    run_cmd(['git', '-C', str(repo), 'checkout', '-b', 'my_branch'])
+
+    (repo / 'some_file').write_text('some_content')
+
+    run_cmd(['git', '-C', str(repo), 'add', '.'])
+    run_cmd(['git', '-C', str(repo), 'commit', '-m', 'some message'])
+
+    result = invoke(['pull', 'test1', '--ask'], input='y\n')
+    assert result.exit_code == 0
+    assert result.stdout.startswith(
+        'Following paths will most likely be replaced:',
+    )
+    assert '- /' in result.stdout
+    assert ' (from "test1")' in result.stdout
+    assert 'Proceed? [Y/n]: y' in result.stdout
+    assert result.stdout.endswith('Operation successfully completed.\n')
+    assert (source_dir / 'some_file').read_text() == 'some_content'
+
+    # abort ask
+    (repo / 'some_file').write_text('new_content')
+
+    run_cmd(['git', '-C', str(repo), 'add', '.'])
+    run_cmd(['git', '-C', str(repo), 'commit', '-m', 'some message'])
+
+    result = invoke(['pull', 'test1', '--ask'], input='n\n')
+    assert result.exit_code == 0
+    assert (source_dir / 'some_file').read_text() == 'some_content'

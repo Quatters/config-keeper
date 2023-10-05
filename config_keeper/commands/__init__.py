@@ -27,11 +27,20 @@ def push(projects: t.List[str]):  # noqa: UP006
     other projects to be processed).
     """
 
-    _operate('push', projects, ProjectValidator(path_existence='error'))
+    conf = config.load()
+    validator = ProjectValidator(path_existence='error')
+
+    for project in projects:
+        validator.validate(project, conf)
+
+    _operate('push', projects, conf)
 
 
 @cli.command()
-def pull(projects: t.List[str]):  # noqa: UP006
+def pull(
+    projects: t.List[str],  # noqa: UP006
+    ask: t.Annotated[bool, typer.Option()] = True,
+):
     """
     Pull all files and directories of projects from their repositories and move
     them to projects' paths with complete overwrite of original files. This
@@ -39,19 +48,30 @@ def pull(projects: t.List[str]):  # noqa: UP006
     prevent other projects to be processed).
     """
 
-    _operate('pull', projects, ProjectValidator(path_existence='skip'))
+    conf = config.load()
+    validator = ProjectValidator(path_existence='skip')
+
+    if ask:
+        console.print('Following paths will most likely be replaced:')
+
+        for project in projects:
+            for path in conf['projects'][project]['paths'].values():
+                console.print(f'- {path} (from "{project}")')
+
+        if not typer.confirm('Proceed?', default=True):
+            raise typer.Exit
+
+    for project in projects:
+        validator.validate(project, conf)
+
+    _operate('pull', projects, conf)
 
 
 def _operate(
     operation: t.Literal['push', 'pull'],
     projects: list[str],
-    validator: ProjectValidator,
+    conf: config.TConfig,
 ):
-    conf = config.load()
-
-    for project in projects:
-        validator.validate(project, conf)
-
     errors: dict[str, str] = {}
 
     with progress.Progress() as p:
