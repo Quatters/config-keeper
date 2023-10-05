@@ -12,11 +12,11 @@ from config_keeper import exceptions as exc
 from config_keeper.sync_handler import SyncHandler
 from config_keeper.validation import ProjectValidator
 
-cli = typer.Typer(no_args_is_help=True)
+cli = typer.Typer()
 
-cli.add_typer(project_cli, name='project', no_args_is_help=True)
-cli.add_typer(config_cli, name='config', no_args_is_help=True)
-cli.add_typer(paths_cli, name='paths', no_args_is_help=True)
+cli.add_typer(project_cli, name='project')
+cli.add_typer(config_cli, name='config')
+cli.add_typer(paths_cli, name='paths')
 
 
 @cli.command()
