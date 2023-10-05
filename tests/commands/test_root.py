@@ -1,3 +1,4 @@
+import subprocess
 from unittest import mock
 from uuid import uuid1
 
@@ -38,7 +39,7 @@ def test_push_creates_remote_branch():
         },
     })
 
-    result = invoke(['push', 'test1'])
+    result = invoke(['push', 'test1', '--no-ask'])
     assert result.exit_code == 0
     assert result.stdout.endswith('Operation successfully completed.\n')
 
@@ -96,7 +97,7 @@ def test_push_overwrites_remote_branch_content():
 
     # checkout another branch in remote repo to avoid push error
     run_cmd(['git', '-C', str(repo), 'checkout', '-b', 'empty_branch'])
-    result = invoke(['push', 'test1'])
+    result = invoke(['push', 'test1', '--no-ask'])
     assert result.exit_code == 0, result.stdout
 
     run_cmd(['git', '-C', str(repo), 'checkout', 'my_branch'])
@@ -152,7 +153,7 @@ def test_error_on_push():
         side_effect=trouble_maker,
         autospec=True,
     ):
-        result = invoke(['push', 'test1', 'test2', 'test3'])
+        result = invoke(['push', 'test1', 'test2', 'test3', '--no-ask'])
     assert result.exit_code == 220
     assert result.stdout.startswith('Processing...')
     assert (
@@ -164,6 +165,51 @@ def test_error_on_push():
     # check that test2 is successfully pushed
     run_cmd(['git', '-C', str(repo), 'checkout', 'my_branch'])
     assert (repo / 'some_file').is_file()
+
+
+def test_push_with_ask():
+    repo = create_repo()
+    some_file = create_file(name='some_file', content='some file content')
+
+    config.save({
+        'projects': {
+            'test1': {
+                'branch': 'my_branch',
+                'repository': str(repo),
+                'paths': {
+                    'some_file': str(some_file),
+                },
+            },
+        },
+    })
+
+    result = invoke(['push', 'test1', '--ask'], input='n\n')
+    assert result.exit_code == 0, result.stdout
+    assert result.stdout.startswith(
+        'Following branches will most likely be overwritten:',
+    )
+    assert '- "my_branch" at ' in result.stdout
+    assert '(from "test1")' in result.stdout
+
+    with pytest.raises(subprocess.CalledProcessError):
+        run_cmd(['git', '-C', str(repo), 'checkout', 'my_branch'])
+
+    # confirm ask
+    result = invoke(['push', 'test1', '--ask'], input='y\n')
+    assert result.exit_code == 0, result.stdout
+    assert result.stdout.startswith(
+        'Following branches will most likely be overwritten:',
+    )
+    assert '- "my_branch" at ' in result.stdout
+    assert '(from "test1")' in result.stdout
+    assert 'Proceed? [Y/n]: y' in result.stdout
+    assert 'Processing...' in result.stdout
+    assert result.stdout.endswith('Operation successfully completed.\n')
+
+    run_cmd(['git', '-C', str(repo), 'checkout', 'my_branch'])
+
+    assert (repo / 'some_file').is_file()
+    assert (repo / 'some_file').read_text() == 'some file content'
 
 
 @freeze_time('2000-01-01 00:00:00')

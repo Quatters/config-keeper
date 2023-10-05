@@ -20,7 +20,10 @@ cli.add_typer(paths_cli, name='paths', no_args_is_help=True)
 
 
 @cli.command()
-def push(projects: t.List[str]):  # noqa: UP006
+def push(
+    projects: t.List[str],  # noqa: UP006
+    ask: t.Annotated[bool, typer.Option()] = True,
+):
     """
     Push files or directories of projects to their repositories. This operation
     is NOT atomic (i.e. failing operation for some project does not prevent
@@ -28,10 +31,23 @@ def push(projects: t.List[str]):  # noqa: UP006
     """
 
     conf = config.load()
-    validator = ProjectValidator(path_existence='error')
 
+    validator = ProjectValidator(path_existence='error')
     for project in projects:
         validator.validate(project, conf)
+
+    if ask:
+        console.print('Following branches will most likely be overwritten:')
+
+        for project in projects:
+            console.print(
+                f'- "{conf["projects"][project]["branch"]}" at '
+                f'{conf["projects"][project]["repository"]} '
+                f'(from "{project}")',
+            )
+
+        if not typer.confirm('Proceed?', default=True):
+            raise typer.Exit
 
     _operate('push', projects, conf)
 
@@ -49,7 +65,10 @@ def pull(
     """
 
     conf = config.load()
+
     validator = ProjectValidator(path_existence='skip')
+    for project in projects:
+        validator.validate(project, conf)
 
     if ask:
         console.print('Following paths will most likely be replaced:')
@@ -60,9 +79,6 @@ def pull(
 
         if not typer.confirm('Proceed?', default=True):
             raise typer.Exit
-
-    for project in projects:
-        validator.validate(project, conf)
 
     _operate('pull', projects, conf)
 
