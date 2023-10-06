@@ -1,3 +1,4 @@
+import importlib.metadata
 import subprocess
 from unittest import mock
 from uuid import uuid1
@@ -14,6 +15,13 @@ from config_keeper.sync_handler import (
 from freezegun import freeze_time
 
 from tests.helpers import create_dir, create_file, create_repo, invoke, run_cmd
+
+
+def test_version():
+    real_version = importlib.metadata.version('config-keeper2')
+    result = invoke(['--version'])
+    assert result.exit_code == 0, result.stdout
+    assert result.stdout == f'{real_version}\n'
 
 
 def test_push_creates_remote_branch():

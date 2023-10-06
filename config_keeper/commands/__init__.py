@@ -1,5 +1,6 @@
 import subprocess  # noqa: I001
 import typing as t
+import importlib.metadata
 
 import typer
 from rich import progress
@@ -17,6 +18,22 @@ cli = typer.Typer()
 cli.add_typer(project_cli, name='project', help='Manage projects.')
 cli.add_typer(config_cli, name='config', help='Manage config of this tool.')
 cli.add_typer(paths_cli, name='paths', help='Manage project paths.')
+
+
+@cli.callback(invoke_without_command=True)
+def print_version(
+    version: t.Annotated[
+        bool,
+        typer.Option(
+            '--version',
+            help='Show current version and exit.',
+            is_eager=True,
+        ),
+    ] = False,
+):
+    if version:
+        console.print(importlib.metadata.version('config-keeper2'))
+        raise typer.Exit
 
 
 @cli.command()
