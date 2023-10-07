@@ -97,7 +97,7 @@ include = ["config_keeper/*"]
 
 [tool.coverage.report]
 fail_under = 100
-exclude_lines = ["# nocv"]
+exclude_lines = ["# nocv", "if t.TYPE_CHECKING:"]
 show_missing = true
 skip_covered = true
 

@@ -2,8 +2,8 @@ import typer
 
 from config_keeper import config, console, settings
 from config_keeper import exceptions as exc
-from config_keeper.console_helpers import print_critical, print_warning
-from config_keeper.validation import TYPENAME, ProjectValidator, get_type
+from config_keeper.progress import spinner
+from config_keeper.validation import ProjectValidator, RootValidator
 
 cli = typer.Typer()
 
@@ -27,24 +27,26 @@ def validate():
 
     conf = config.load()
     is_valid = True
+    has_warnings = False
 
-    for key, value in conf.items():
-        if typehint := config.TConfig.__annotations__.get(key, None):
-            realtype = get_type(typehint)
-            if not isinstance(value, realtype):
-                print_critical(f'"{key}" is not a {TYPENAME[realtype]}.')
-                is_valid = False
-        else:
-            print_warning(f'unknown parameter "{key}".')
+    with spinner() as p:
+        p.add_task('Validating...', total=None)
 
-    validator = ProjectValidator(path_existence='warning')
-    for project in conf['projects']:
-        try:
-            validator.validate(project, conf)
-        except exc.InvalidConfigError:
-            is_valid = False
+        root_validator = RootValidator(conf)
+        is_valid = root_validator.validate()
+        has_warnings = root_validator.has_warnings
+
+        project_validator = ProjectValidator(conf, path_existence='warning')
+        for project in conf['projects']:
+            project_validator.validate(project)
+            is_valid = is_valid and project_validator.is_valid
+            has_warnings = has_warnings or project_validator.has_warnings
+
+    root_validator.print_errors()
+    project_validator.print_errors()
 
     if not is_valid:
         raise exc.InvalidConfigError
 
-    console.print('Config is valid.')
+    if not has_warnings:
+        console.print('OK', style='green')

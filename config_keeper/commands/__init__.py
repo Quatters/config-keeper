@@ -3,7 +3,6 @@ import typing as t
 import importlib.metadata
 
 import typer
-from rich import progress
 
 from config_keeper.commands.config import cli as config_cli
 from config_keeper.commands.paths import cli as paths_cli
@@ -12,6 +11,10 @@ from config_keeper import config, console
 from config_keeper import exceptions as exc
 from config_keeper.sync_handler import SyncHandler
 from config_keeper.validation import ProjectValidator
+from config_keeper.progress import spinner
+
+if t.TYPE_CHECKING:
+    from rich.progress import TaskID
 
 cli = typer.Typer()
 
@@ -48,10 +51,9 @@ def push(
     """
 
     conf = config.load()
+    validator = ProjectValidator(conf, path_existence='error')
 
-    validator = ProjectValidator(path_existence='error')
-    for project in projects:
-        validator.validate(project, conf)
+    _validate_projects(projects, validator)
 
     if ask:
         console.print('Going to push into following branches:')
@@ -82,10 +84,9 @@ def pull(
     """
 
     conf = config.load()
+    validator = ProjectValidator(conf, path_existence='skip')
 
-    validator = ProjectValidator(path_existence='skip')
-    for project in projects:
-        validator.validate(project, conf)
+    _validate_projects(projects, validator)
 
     if ask:
         console.print('Following paths will most likely be replaced:')
@@ -100,6 +101,26 @@ def pull(
     _operate('pull', projects, conf)
 
 
+def _validate_projects(
+    projects: list[str],
+    validator: ProjectValidator,
+):
+    with spinner() as s:
+        prev_task: TaskID | None = None
+        for project in projects:
+            if prev_task is not None:
+                s.stop_task(prev_task)
+            prev_task = s.add_task(
+                f'Validating project "{project}"...',
+                total=None,
+            )
+            validator.validate(project)
+
+    validator.print_errors()
+    if not validator.is_valid:
+        raise exc.InvalidConfigError
+
+
 def _operate(
     operation: t.Literal['push', 'pull'],
     projects: list[str],
@@ -107,16 +128,20 @@ def _operate(
 ):
     errors: dict[str, str] = {}
 
-    with progress.Progress() as p:
-        task = p.add_task('Processing...', total=len(projects))
+    with spinner() as s:
+        prev_task: TaskID | None = None
         for project in projects:
+            if prev_task is not None:
+                s.stop_task(prev_task)
+            prev_task = s.add_task(
+                f'Processing project "{project}"...',
+                total=None,
+            )
             handler = SyncHandler(project, conf)
             try:
                 getattr(handler, operation)()
             except subprocess.CalledProcessError as e:
                 errors[project] = e.stdout + e.stderr
-            finally:
-                p.update(task, advance=1)
 
     if errors:
         raise exc.SyncError(errors)
