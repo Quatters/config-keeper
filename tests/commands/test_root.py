@@ -120,6 +120,51 @@ def test_push_overwrites_remote_branch_content():
     assert not (repo /  'must_be_deleted').exists()
 
 
+def test_push_preserves_commit_history():
+    repo = create_repo()
+    some_file = create_file(name='some_file', content='some file content')
+
+    config.save({
+        'projects': {
+            'test1': {
+                'branch': 'my_branch',
+                'repository': str(repo),
+                'paths': {
+                    'some_file': str(some_file),
+                },
+            },
+        },
+    })
+
+    run_cmd(['git', '-C', str(repo), 'checkout', '-b', 'my_branch'])
+
+    # create commit
+    create_file(
+        name='some_file',
+        parent=repo,
+        content='old content',
+    )
+    run_cmd(['git', '-C', str(repo), 'add', '.'])
+    run_cmd(['git', '-C', str(repo), 'commit', '-m', 'some_message'])
+
+    # checkout another branch in remote repo to avoid push error
+    run_cmd(['git', '-C', str(repo), 'checkout', '-b', 'empty_branch'])
+
+    # push
+    result = invoke(['push', 'test1', '--no-ask'])
+    assert result.exit_code == 0, result.stdout
+
+    # checkout right branch
+    run_cmd(['git', '-C', str(repo), 'checkout', 'my_branch'])
+
+    # check commits
+    result = run_cmd(['git', '-C', str(repo), 'log', '--pretty=oneline'])
+    lines = [line for line in result.stdout.split('\n') if line != '']
+    assert len(lines) == 2, lines
+    assert 'Auto push' in lines[0]
+    assert 'some_message' in lines[1]
+
+
 def test_error_on_push():
     some_file = create_file()
     repo = create_repo()

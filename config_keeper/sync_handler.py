@@ -24,6 +24,32 @@ def run_cmd(cmd: list[str]) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, check=True, capture_output=True, text=True)
 
 
+def clear_working_tree(path: Path | str):
+    """
+    Removes all files and directories in specified path except .git directory.
+    """
+    for entity in Path(path).iterdir():
+        if entity.stem == '.git':
+            continue
+        if entity.is_dir():
+            shutil.rmtree(entity)
+        elif entity.is_file():
+            entity.unlink()
+
+
+def remote_branch_exists(
+    repo: Path | str,
+    branch: str,
+    remote_name: str = 'origin',
+) -> bool:
+    full_name = f'refs/heads/{branch}'
+    result = run_cmd([
+        'git', '-C', str(repo), 'ls-remote', '--heads', remote_name,
+        full_name,
+    ])
+    return full_name in result.stdout
+
+
 class SyncHandler:
     def __init__(self, project: str, conf: config.TConfig):
         self.project = project
@@ -36,7 +62,14 @@ class SyncHandler:
         temp_dir = tempfile.mkdtemp()
 
         run_cmd(['git', 'init', temp_dir])
-        run_cmd(['git', '-C', temp_dir, 'checkout', '-b', branch])
+        run_cmd(['git', '-C', temp_dir, 'remote', 'add', 'origin', repository])
+
+        if remote_branch_exists(temp_dir, branch):
+            run_cmd(['git', '-C', temp_dir, 'fetch', 'origin'])
+            run_cmd(['git', '-C', temp_dir, 'checkout', branch])
+            clear_working_tree(temp_dir)
+        else:
+            run_cmd(['git', '-C', temp_dir, 'checkout', '-b', branch])
 
         self._fetch_files(temp_dir)
 
@@ -45,7 +78,7 @@ class SyncHandler:
             'git', '-C', temp_dir, 'commit', '-m', self._get_commit_message(),
         ])
         run_cmd([
-            'git', '-C', temp_dir, 'push', '-u', repository, branch, '--force',
+            'git', '-C', temp_dir, 'push', '--set-upstream', 'origin', branch,
         ])
 
         delete_dir(temp_dir)
