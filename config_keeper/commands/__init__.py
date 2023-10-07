@@ -114,7 +114,7 @@ def _operate(
             try:
                 getattr(handler, operation)()
             except subprocess.CalledProcessError as e:
-                errors[project] = e.stderr
+                errors[project] = e.stdout + e.stderr
             finally:
                 p.update(task, advance=1)
 
