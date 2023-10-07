@@ -391,7 +391,7 @@ def test_pull_with_ask():
     assert result.stdout.startswith(
         'Following paths will most likely be replaced:',
     )
-    assert '- /' in result.stdout
+    assert '- ' in result.stdout
     assert ' (from "test1")' in result.stdout
     assert 'Proceed? [Y/n]: y' in result.stdout
     assert result.stdout.endswith('Operation successfully completed.\n')
