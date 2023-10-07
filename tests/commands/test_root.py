@@ -239,7 +239,7 @@ def test_push_with_ask():
     result = invoke(['push', 'test1', '--ask'], input='n\n')
     assert result.exit_code == 0, result.stdout
     assert result.stdout.startswith(
-        'Following branches will most likely be overwritten:',
+        'Going to push into following branches:',
     )
     assert '- "my_branch" at ' in result.stdout
     assert '(from "test1")' in result.stdout
@@ -251,7 +251,7 @@ def test_push_with_ask():
     result = invoke(['push', 'test1', '--ask'], input='y\n')
     assert result.exit_code == 0, result.stdout
     assert result.stdout.startswith(
-        'Following branches will most likely be overwritten:',
+        'Going to push into following branches:',
     )
     assert '- "my_branch" at ' in result.stdout
     assert '(from "test1")' in result.stdout

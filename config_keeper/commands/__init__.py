@@ -54,7 +54,7 @@ def push(
         validator.validate(project, conf)
 
     if ask:
-        console.print('Following branches will most likely be overwritten:')
+        console.print('Going to push into following branches:')
 
         for project in projects:
             console.print(
