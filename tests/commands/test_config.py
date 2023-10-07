@@ -17,7 +17,7 @@ def test_validate():
     # check defaults (should be valid)
     result = invoke(['config', 'validate'])
     assert result.exit_code == 0
-    assert result.stdout == 'Config is valid.\n'
+    assert result.stdout == '\nOK\n'
 
     invalid_path = str(uuid1()).replace('-', '/')
     test_config = {
@@ -46,6 +46,7 @@ def test_validate():
                     '%^&': '',
                 },
             },
+            'test6': 'not_map',
         },
     }
     config.save(test_config)
@@ -53,7 +54,7 @@ def test_validate():
     result = invoke(['config', 'validate'])
     assert result.exit_code == 201
     assert result.stdout == (
-        'Warning: unknown parameter "invalid_root_key".\n'
+        '\nWarning: unknown parameter "invalid_root_key".\n'
         'Warning: unknown parameter "projects.test1.invalid_project_key".\n'
         'Critical: "projects.test1.paths.invalid_path_type" ({}) is not a '
         'string.\n'
@@ -73,6 +74,7 @@ def test_validate():
         'Error: "projects.test5.paths.%^&" is not a valid path name.\n'
         'Error: "projects.test5" missing parameter "branch".\n'
         'Error: "projects.test5" missing parameter "repository".\n'
+        'Critical: "projects.test6" is not a map.\n'
     )
 
     test_config = {'projects': ''}
@@ -81,7 +83,7 @@ def test_validate():
     result = invoke(['config', 'validate'])
     assert result.exit_code == 201
     assert result.stdout == (
-        'Critical: "projects" is not a map.\n'
+        '\nCritical: "projects" is not a map.\n'
     )
 
 

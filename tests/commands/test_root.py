@@ -208,7 +208,6 @@ def test_error_on_push():
     ):
         result = invoke(['push', 'test1', 'test2', 'test3', '--no-ask'])
     assert result.exit_code == 220
-    assert result.stdout.startswith('Processing...')
     assert (
         'Error: operation failed for following projects:\n\n'
         'test1\n'
@@ -239,7 +238,7 @@ def test_push_with_ask():
     result = invoke(['push', 'test1', '--ask'], input='n\n')
     assert result.exit_code == 0, result.stdout
     assert result.stdout.startswith(
-        'Going to push into following branches:',
+        '\nGoing to push into following branches:',
     )
     assert '- "my_branch" at ' in result.stdout
     assert '(from "test1")' in result.stdout
@@ -251,12 +250,11 @@ def test_push_with_ask():
     result = invoke(['push', 'test1', '--ask'], input='y\n')
     assert result.exit_code == 0, result.stdout
     assert result.stdout.startswith(
-        'Going to push into following branches:',
+        '\nGoing to push into following branches:',
     )
     assert '- "my_branch" at ' in result.stdout
     assert '(from "test1")' in result.stdout
     assert 'Proceed? [Y/n]: y' in result.stdout
-    assert 'Processing...' in result.stdout
     assert result.stdout.endswith('Operation successfully completed.\n')
 
     run_cmd(['git', '-C', str(repo), 'checkout', 'my_branch'])
@@ -389,7 +387,7 @@ def test_pull_with_ask():
     result = invoke(['pull', 'test1', '--ask'], input='y\n')
     assert result.exit_code == 0
     assert result.stdout.startswith(
-        'Following paths will most likely be replaced:',
+        '\nFollowing paths will most likely be replaced:',
     )
     assert '- ' in result.stdout
     assert ' (from "test1")' in result.stdout
@@ -406,3 +404,24 @@ def test_pull_with_ask():
     result = invoke(['pull', 'test1', '--ask'], input='n\n')
     assert result.exit_code == 0
     assert (source_dir / 'some_file').read_text() == 'some_content'
+
+
+def test_push_with_invalid_config():
+    repo = create_repo()
+
+    config.save({
+        'projects': {
+            'test1': {
+                'repository': str(repo),
+                'branch': 'my_branch',
+                'paths': {
+                    'some_file': 'invalid path ** / ^%$',
+                },
+            },
+        },
+    })
+
+    result = invoke(['push', 'test1', '--no-ask'])
+    assert result.exit_code == 201
+    assert 'Error: "projects.test1.paths.some_file"' in result.stdout
+    assert 'does not exist.\n' in result.stdout
