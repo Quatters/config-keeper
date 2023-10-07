@@ -1,3 +1,5 @@
+import importlib.metadata
+import subprocess
 from unittest import mock
 from uuid import uuid1
 
@@ -13,6 +15,13 @@ from config_keeper.sync_handler import (
 from freezegun import freeze_time
 
 from tests.helpers import create_dir, create_file, create_repo, invoke, run_cmd
+
+
+def test_version():
+    real_version = importlib.metadata.version('config-keeper2')
+    result = invoke(['--version'])
+    assert result.exit_code == 0, result.stdout
+    assert result.stdout == f'{real_version}\n'
 
 
 def test_push_creates_remote_branch():
@@ -38,7 +47,7 @@ def test_push_creates_remote_branch():
         },
     })
 
-    result = invoke(['push', 'test1'])
+    result = invoke(['push', 'test1', '--no-ask'])
     assert result.exit_code == 0
     assert result.stdout.endswith('Operation successfully completed.\n')
 
@@ -96,7 +105,7 @@ def test_push_overwrites_remote_branch_content():
 
     # checkout another branch in remote repo to avoid push error
     run_cmd(['git', '-C', str(repo), 'checkout', '-b', 'empty_branch'])
-    result = invoke(['push', 'test1'])
+    result = invoke(['push', 'test1', '--no-ask'])
     assert result.exit_code == 0, result.stdout
 
     run_cmd(['git', '-C', str(repo), 'checkout', 'my_branch'])
@@ -109,6 +118,51 @@ def test_push_overwrites_remote_branch_content():
         'nested file content'
     )
     assert not (repo /  'must_be_deleted').exists()
+
+
+def test_push_preserves_commit_history():
+    repo = create_repo()
+    some_file = create_file(name='some_file', content='some file content')
+
+    config.save({
+        'projects': {
+            'test1': {
+                'branch': 'my_branch',
+                'repository': str(repo),
+                'paths': {
+                    'some_file': str(some_file),
+                },
+            },
+        },
+    })
+
+    run_cmd(['git', '-C', str(repo), 'checkout', '-b', 'my_branch'])
+
+    # create commit
+    create_file(
+        name='some_file',
+        parent=repo,
+        content='old content',
+    )
+    run_cmd(['git', '-C', str(repo), 'add', '.'])
+    run_cmd(['git', '-C', str(repo), 'commit', '-m', 'some_message'])
+
+    # checkout another branch in remote repo to avoid push error
+    run_cmd(['git', '-C', str(repo), 'checkout', '-b', 'empty_branch'])
+
+    # push
+    result = invoke(['push', 'test1', '--no-ask'])
+    assert result.exit_code == 0, result.stdout
+
+    # checkout right branch
+    run_cmd(['git', '-C', str(repo), 'checkout', 'my_branch'])
+
+    # check commits
+    result = run_cmd(['git', '-C', str(repo), 'log', '--pretty=oneline'])
+    lines = [line for line in result.stdout.split('\n') if line != '']
+    assert len(lines) == 2, lines
+    assert 'Auto push' in lines[0]
+    assert 'some_message' in lines[1]
 
 
 def test_error_on_push():
@@ -152,7 +206,7 @@ def test_error_on_push():
         side_effect=trouble_maker,
         autospec=True,
     ):
-        result = invoke(['push', 'test1', 'test2', 'test3'])
+        result = invoke(['push', 'test1', 'test2', 'test3', '--no-ask'])
     assert result.exit_code == 220
     assert result.stdout.startswith('Processing...')
     assert (
@@ -164,6 +218,51 @@ def test_error_on_push():
     # check that test2 is successfully pushed
     run_cmd(['git', '-C', str(repo), 'checkout', 'my_branch'])
     assert (repo / 'some_file').is_file()
+
+
+def test_push_with_ask():
+    repo = create_repo()
+    some_file = create_file(name='some_file', content='some file content')
+
+    config.save({
+        'projects': {
+            'test1': {
+                'branch': 'my_branch',
+                'repository': str(repo),
+                'paths': {
+                    'some_file': str(some_file),
+                },
+            },
+        },
+    })
+
+    result = invoke(['push', 'test1', '--ask'], input='n\n')
+    assert result.exit_code == 0, result.stdout
+    assert result.stdout.startswith(
+        'Going to push into following branches:',
+    )
+    assert '- "my_branch" at ' in result.stdout
+    assert '(from "test1")' in result.stdout
+
+    with pytest.raises(subprocess.CalledProcessError):
+        run_cmd(['git', '-C', str(repo), 'checkout', 'my_branch'])
+
+    # confirm ask
+    result = invoke(['push', 'test1', '--ask'], input='y\n')
+    assert result.exit_code == 0, result.stdout
+    assert result.stdout.startswith(
+        'Going to push into following branches:',
+    )
+    assert '- "my_branch" at ' in result.stdout
+    assert '(from "test1")' in result.stdout
+    assert 'Proceed? [Y/n]: y' in result.stdout
+    assert 'Processing...' in result.stdout
+    assert result.stdout.endswith('Operation successfully completed.\n')
+
+    run_cmd(['git', '-C', str(repo), 'checkout', 'my_branch'])
+
+    assert (repo / 'some_file').is_file()
+    assert (repo / 'some_file').read_text() == 'some file content'
 
 
 @freeze_time('2000-01-01 00:00:00')
@@ -193,9 +292,8 @@ def test_executable_not_found():
         sync_handler_run_cmd([executable, 'some'])
 
 
-def test_pull():
+def test_pull_overwrites_original_files():
     repo = create_repo()
-
     source_dir = create_dir()
 
     config.save({
@@ -227,7 +325,7 @@ def test_pull():
     run_cmd(['git', '-C', str(repo), 'add', '.'])
     run_cmd(['git', '-C', str(repo), 'commit', '-m', 'some message'])
 
-    result = invoke(['pull', 'test1'])
+    result = invoke(['pull', 'test1', '--no-ask'])
     assert result.exit_code == 0
     assert result.stdout.endswith('Operation successfully completed.\n')
 
@@ -253,7 +351,7 @@ def test_pull():
     file_must_be_deleted = (source_dir / 'some_dir' / 'file_must_be_deleted')
     file_must_be_deleted.touch()
 
-    result = invoke(['pull', 'test1'])
+    result = invoke(['pull', 'test1', '--no-ask'])
     assert result.exit_code == 0
     assert result.stdout.endswith('Operation successfully completed.\n')
 
@@ -263,3 +361,48 @@ def test_pull():
         'new_content'
     )
     assert (source_dir / 'some_dir' / 'some_dir_file').is_file()
+
+
+def test_pull_with_ask():
+    repo = create_repo()
+    source_dir = create_dir()
+
+    config.save({
+        'projects': {
+            'test1': {
+                'repository': str(repo),
+                'branch': 'my_branch',
+                'paths': {
+                    'some_file': str(source_dir  / 'some_file'),
+                },
+            },
+        },
+    })
+
+    run_cmd(['git', '-C', str(repo), 'checkout', '-b', 'my_branch'])
+
+    (repo / 'some_file').write_text('some_content')
+
+    run_cmd(['git', '-C', str(repo), 'add', '.'])
+    run_cmd(['git', '-C', str(repo), 'commit', '-m', 'some message'])
+
+    result = invoke(['pull', 'test1', '--ask'], input='y\n')
+    assert result.exit_code == 0
+    assert result.stdout.startswith(
+        'Following paths will most likely be replaced:',
+    )
+    assert '- ' in result.stdout
+    assert ' (from "test1")' in result.stdout
+    assert 'Proceed? [Y/n]: y' in result.stdout
+    assert result.stdout.endswith('Operation successfully completed.\n')
+    assert (source_dir / 'some_file').read_text() == 'some_content'
+
+    # abort ask
+    (repo / 'some_file').write_text('new_content')
+
+    run_cmd(['git', '-C', str(repo), 'add', '.'])
+    run_cmd(['git', '-C', str(repo), 'commit', '-m', 'some message'])
+
+    result = invoke(['pull', 'test1', '--ask'], input='n\n')
+    assert result.exit_code == 0
+    assert (source_dir / 'some_file').read_text() == 'some_content'

@@ -39,7 +39,12 @@ using ``validate`` command
 pip install --user config-keeper2
 ```
 
-### Usage
+**NOTE**:
+if you are using latest versions of Ubuntu/Debian/Fedora, you may also
+need to use `--break-system-packages` flag. Refer to
+[PEP 668](https://peps.python.org/pep-0668/) for more information.
+
+## Usage
 
 Run
 

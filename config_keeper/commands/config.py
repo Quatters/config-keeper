@@ -11,7 +11,8 @@ cli = typer.Typer()
 @cli.command()
 def path():
     """
-    Show configuration file path.
+    Show configuration file path. You can set CONFIG_KEEPER_CONFIG_FILE
+    environment variable to change its path.
     """
 
     config.ensure_exists()
