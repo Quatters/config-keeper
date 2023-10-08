@@ -1,5 +1,7 @@
 # `config-keeper`
 
+CLI tool for keeping your personal config files in a repository
+
 **Usage**:
 
 ```console
@@ -8,19 +10,22 @@ $ config-keeper [OPTIONS] COMMAND [ARGS]...
 
 **Options**:
 
+* `--version`: Show current version and exit.
 * `--install-completion`: Install completion for the current shell.
 * `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
 * `--help`: Show this message and exit.
 
 **Commands**:
 
-* `config`
-* `paths`
-* `project`
+* `config`: Manage config of this tool.
+* `paths`: Manage project paths.
+* `project`: Manage projects.
 * `pull`: Pull all files and directories of projects...
 * `push`: Push files or directories of projects to...
 
 ## `config-keeper config`
+
+Manage config of this tool.
 
 **Usage**:
 
@@ -39,7 +44,8 @@ $ config-keeper config [OPTIONS] COMMAND [ARGS]...
 
 ### `config-keeper config path`
 
-Show configuration file path.
+Show configuration file path. You can set CONFIG_KEEPER_CONFIG_FILE
+environment variable to change its path.
 
 **Usage**:
 
@@ -67,6 +73,8 @@ $ config-keeper config validate [OPTIONS]
 
 ## `config-keeper paths`
 
+Manage project paths.
+
 **Usage**:
 
 ```console
@@ -80,7 +88,7 @@ $ config-keeper paths [OPTIONS] COMMAND [ARGS]...
 **Commands**:
 
 * `add`: Add directories or files to project.
-* `delete`: Delete paths by their keys from project.
+* `delete`: Delete paths by their path names from...
 
 ### `config-keeper paths add`
 
@@ -95,17 +103,22 @@ $ config-keeper paths add [OPTIONS] PATHS...
 
 **Arguments**:
 
-* `PATHS...`: [required]
+* `PATHS...`: 
+    Path list with following syntax: path_name:/path/to/file/or/dir. Path names
+    of each project must be unique as it will be used as temporary file
+    (directory) name for storing it in repository. Path after colon is any
+    path to file (directory) in your filesystem.
+  [required]
 
 **Options**:
 
-* `--project TEXT`: [required]
-* `--overwrite / --no-overwrite`: [default: no-overwrite]
+* `--project TEXT`: The name of project.  [required]
+* `--overwrite / --no-overwrite`: If set, overwrite path names if project already has them. Fail otherwise.  [default: no-overwrite]
 * `--help`: Show this message and exit.
 
 ### `config-keeper paths delete`
 
-Delete paths by their keys from project. This will not affect original
+Delete paths by their path names from project. This will not affect original
 files or directories.
 
 **Usage**:
@@ -116,15 +129,20 @@ $ config-keeper paths delete [OPTIONS] PATH_NAMES...
 
 **Arguments**:
 
-* `PATH_NAMES...`: [required]
+* `PATH_NAMES...`: 
+    Path names of project.
+  [required]
 
 **Options**:
 
-* `--project TEXT`: [required]
-* `--ignore-missing / --no-ignore-missing`: [default: no-ignore-missing]
+* `--project TEXT`: The name of project.  [required]
+* `--ignore-missing / --no-ignore-missing`: If set, path names that are not exist in project will be ignored. Fail
+otherwise.  [default: no-ignore-missing]
 * `--help`: Show this message and exit.
 
 ## `config-keeper project`
+
+Manage projects.
 
 **Usage**:
 
@@ -141,7 +159,7 @@ $ config-keeper project [OPTIONS] COMMAND [ARGS]...
 * `create`: Create a new project.
 * `delete`: Delete project.
 * `list`: List all projects.
-* `show`: Show project's config.
+* `show`: Show project config.
 * `update`: Update project.
 
 ### `config-keeper project create`
@@ -156,13 +174,15 @@ $ config-keeper project create [OPTIONS] PROJECT
 
 **Arguments**:
 
-* `PROJECT`: [required]
+* `PROJECT`: 
+    The name of project.
+  [required]
 
 **Options**:
 
-* `--repository TEXT`: [required]
-* `--branch TEXT`: [default: main]
-* `--check / --no-check`: [default: check]
+* `--repository TEXT`: Repository which is used to store your files and directories.  [required]
+* `--branch TEXT`: Branch of the repository used to push and pull from.  [default: main]
+* `--check / --no-check`: Whether check if repository exist.  [default: check]
 * `--help`: Show this message and exit.
 
 ### `config-keeper project delete`
@@ -177,11 +197,13 @@ $ config-keeper project delete [OPTIONS] PROJECT
 
 **Arguments**:
 
-* `PROJECT`: [required]
+* `PROJECT`: 
+    The name of project.
+  [required]
 
 **Options**:
 
-* `--confirm / --no-confirm`: [default: confirm]
+* `--confirm / --no-confirm`: Whether confirm before deleting.  [default: confirm]
 * `--help`: Show this message and exit.
 
 ### `config-keeper project list`
@@ -196,12 +218,12 @@ $ config-keeper project list [OPTIONS]
 
 **Options**:
 
-* `-v, --verbose`
+* `-v, --verbose`: Show additional information.
 * `--help`: Show this message and exit.
 
 ### `config-keeper project show`
 
-Show project's config.
+Show project config.
 
 **Usage**:
 
@@ -211,7 +233,9 @@ $ config-keeper project show [OPTIONS] PROJECT
 
 **Arguments**:
 
-* `PROJECT`: [required]
+* `PROJECT`: 
+    The name of project.
+  [required]
 
 **Options**:
 
@@ -229,13 +253,15 @@ $ config-keeper project update [OPTIONS] PROJECT
 
 **Arguments**:
 
-* `PROJECT`: [required]
+* `PROJECT`: 
+    The name of project.
+  [required]
 
 **Options**:
 
-* `--repository TEXT`
-* `--branch TEXT`
-* `--check / --no-check`: [default: check]
+* `--repository TEXT`: Repository which is used to store your files and directories.
+* `--branch TEXT`: Branch of the repository used to push and pull from.
+* `--check / --no-check`: Whether check if repository exist.  [default: check]
 * `--help`: Show this message and exit.
 
 ## `config-keeper pull`
@@ -257,6 +283,7 @@ $ config-keeper pull [OPTIONS] PROJECTS...
 
 **Options**:
 
+* `--ask / --no-ask`: [default: ask]
 * `--help`: Show this message and exit.
 
 ## `config-keeper push`
@@ -277,4 +304,5 @@ $ config-keeper push [OPTIONS] PROJECTS...
 
 **Options**:
 
+* `--ask / --no-ask`: [default: ask]
 * `--help`: Show this message and exit.
