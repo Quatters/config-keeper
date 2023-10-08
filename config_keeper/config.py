@@ -15,7 +15,7 @@ class TConfig(t.TypedDict):
     projects: dict[str, TProject]
 
 
-def defaults() -> t.Callable[[], TConfig]:
+def defaults() -> TConfig:
     return {
         'projects': {},
     }

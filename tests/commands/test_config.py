@@ -99,11 +99,11 @@ def test_config_is_not_a_valid_yaml():
     assert f'> {settings.EXECUTABLE_NAME} config validate\n' in result.stdout
     assert 'after.' in result.stdout
     assert re.match((
-        f'^Error: [\n\w\/\-]+\.yaml is not a valid YAML file\.\n'
-        'Please fix or remove it\.\n'
+        rf'^Error: [\n\w\/\-]+\.yaml is not a valid YAML file\.\n'
+        r'Please fix or remove it\.\n'
         'Tip: you can use\n'
         f'> {settings.EXECUTABLE_NAME} config validate\n'
-        'after\.\n$'
+        r'after\.\n$'
     ), result.stdout)
 
 

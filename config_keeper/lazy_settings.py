@@ -17,10 +17,10 @@ class LazySettings:
         })
         _super.__setattr__('overridden_settings', {})
 
-    def __getattr__(self, key: str) -> t.Any:  # noqa: ANN401
+    def __getattr__(self, key: str) -> t.Any:
         return self.overridden_settings.get(key, self.real_settings[key])
 
-    def __setattr__(self, key: str, value: t.Any):  # noqa: ANN401
+    def __setattr__(self, key: str, value: t.Any):
         if key not in self.real_settings:  # nocv
             msg = f'{self.settings_module} has no attribute {key}'
             raise AttributeError(msg)

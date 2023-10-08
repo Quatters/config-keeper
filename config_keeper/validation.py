@@ -12,7 +12,7 @@ from config_keeper.console_helpers import (
     print_warning,
 )
 
-TYPENAME: dict[type[type], str] = {
+TYPENAME: dict[type, str] = {
     str: 'string',
     dict: 'map',
 }
@@ -26,15 +26,17 @@ def ping_remote(
     repository: str,
     *,
     log: bool = False,
-) -> subprocess.CompletedProcess:
-    kwargs = {'capture_output': True, 'text': True}
-    if not log:
-        kwargs = {'stdout': subprocess.DEVNULL, 'stderr': subprocess.DEVNULL}
+) -> subprocess.CompletedProcess[bytes] | subprocess.CompletedProcess[str]:
+    cmd = ['git', 'ls-remote', repository, 'HEAD']
+    if log:
+        return subprocess.run(cmd, check=True, capture_output=True, text=True)
     return subprocess.run(
-        ['git', 'ls-remote', repository, 'HEAD'],
+        cmd,
         check=True,
-        **kwargs,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
+
 
 
 def check_if_project_exists(project: str, conf: config.TConfig):
@@ -42,7 +44,7 @@ def check_if_project_exists(project: str, conf: config.TConfig):
         raise exc.ProjectDoesNotExistError(project)
 
 
-def get_type(typehint: type[type] | t.GenericAlias) -> type[type]:
+def get_type(typehint: type | t.GenericAlias) -> type:
     return getattr(typehint, '__origin__', typehint)
 
 
@@ -181,7 +183,7 @@ class ProjectValidator(Validator):
     def _validate_param(
         self,
         param: str,
-        value: t.Any,  # noqa: ANN401
+        value: t.Any,
         project: str,
     ):
         typehint = config.TProject.__annotations__.get(param, None)
@@ -227,7 +229,7 @@ class ProjectValidator(Validator):
                 'exist.'
             ))
 
-    def _validate_repository(self, repository: str, project: str):
+    def _validate_repository(self, repository: t.Any, project: str):
         try:
             ping_remote(repository)
         except subprocess.CalledProcessError:
