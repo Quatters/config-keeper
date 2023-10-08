@@ -14,9 +14,8 @@ In a few words **config-keeper** does following:
 repository
 * Pulls files from a repository later and puts them to the right places
 
-## Table of contents
+# Table of contents
 
-* [Table of contents](#table-of-contents)
 * [Use cases](#use-cases)
 * [Key features](#key-features)
 * [Install](#install)
