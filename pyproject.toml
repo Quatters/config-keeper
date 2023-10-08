@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "config-keeper2"
-version = "1.0.0a3"
-description = "CLI tool for keeping your personal config files in repository"
+version = "1.0.0a4"
+description = "CLI tool for keeping your personal config files in a repository"
 authors = ["Vladislav Korenkov <vladnfs3@gmail.com>"]
 readme = "README.md"
 license = "GPL-3.0-only"
@@ -44,6 +44,11 @@ pytest = "^7.4.2"
 pytest-cov = "^4.1.0"
 ruff = "^0.0.291"
 freezegun = "^1.2.2"
+types-pyyaml = "^6.0.12.12"
+
+[tool.poetry.group.dev.dependencies.typer-cli]
+git = "https://github.com/Patarimi/typer-cli.git"
+branch = "master"
 
 [tool.ruff]
 select = [
@@ -79,7 +84,7 @@ select = [
 ]
 line-length = 80
 target-version = 'py311'
-ignore = ["ANN101", "PLR0913"]
+ignore = ["ANN101", "PLR0913", "ANN401"]
 src = ["config_keeper", "tests"]
 fixable = ['ALL']
 

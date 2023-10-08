@@ -7,7 +7,7 @@ import typer
 from config_keeper.commands.config import cli as config_cli
 from config_keeper.commands.paths import cli as paths_cli
 from config_keeper.commands.project import cli as project_cli
-from config_keeper import config, console
+from config_keeper import config, console, settings
 from config_keeper import exceptions as exc
 from config_keeper.sync_handler import SyncHandler
 from config_keeper.validation import ProjectValidator
@@ -16,7 +16,10 @@ from config_keeper.progress import spinner
 if t.TYPE_CHECKING:
     from rich.progress import TaskID
 
-cli = typer.Typer()
+cli = typer.Typer(
+    name=settings.EXECUTABLE_NAME,
+    help='CLI tool for keeping your personal config files in a repository',
+)
 
 cli.add_typer(project_cli, name='project', help='Manage projects.')
 cli.add_typer(config_cli, name='config', help='Manage config of this tool.')
@@ -35,7 +38,10 @@ def print_version(
     ] = False,
 ):
     if version:
-        console.print(importlib.metadata.version('config-keeper2'))
+        console.print(
+            importlib.metadata.version('config-keeper2'),
+            highlight=False,
+        )
         raise typer.Exit
 
 

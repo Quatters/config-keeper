@@ -13,7 +13,7 @@ from config_keeper.validation import check_if_project_exists
 cli = typer.Typer()
 
 
-path_arg_regex = re.compile(r'(^[\w-]+):([\w\/~\-\. ]+$)')
+path_arg_regex = re.compile(r'(^[\w\-\. ]+):([\w\/~\-\. ]+$)')
 
 overwrite_help = """
     If set, overwrite path names if project already has them. Fail otherwise.
@@ -91,7 +91,7 @@ def delete(
     ] = False,
 ):
     """
-    Delete paths by their keys from project. This will not affect original
+    Delete paths by their path names from project. This will not affect original
     files or directories.
     """
 
