@@ -29,6 +29,11 @@ jobs:
         with:
           poetry-version: ${{ matrix.poetry-version }}
 
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
       - uses: actions/cache@v3
         name: Define cache
         with:

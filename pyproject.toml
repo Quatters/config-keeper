@@ -46,6 +46,10 @@ ruff = "^0.0.291"
 freezegun = "^1.2.2"
 types-pyyaml = "^6.0.12.12"
 
+[tool.poetry.group.dev.dependencies.typer-cli]
+git = "https://github.com/Patarimi/typer-cli.git"
+branch = "master"
+
 [tool.ruff]
 select = [
     'ANN',

@@ -346,13 +346,13 @@ files = [
 
 [[package]]
 name = "shellingham"
-version = "1.5.3"
+version = "1.4.0"
 description = "Tool to Detect Surrounding Shell"
 optional = false
-python-versions = ">=3.7"
+python-versions = "!=3.0,!=3.1,!=3.2,!=3.3,>=2.6"
 files = [
-    {file = "shellingham-1.5.3-py2.py3-none-any.whl", hash = "sha256:419c6a164770c9c7cfcaeddfacb3d31ac7a8db0b0f3e9c1287679359734107e9"},
-    {file = "shellingham-1.5.3.tar.gz", hash = "sha256:cb4a6fec583535bc6da17b647dd2330cf7ef30239e05d547d99ae3705fd0f7f8"},
+    {file = "shellingham-1.4.0-py2.py3-none-any.whl", hash = "sha256:536b67a0697f2e4af32ab176c00a50ac2899c5a05e0d8e2dadac8e58888283f9"},
+    {file = "shellingham-1.4.0.tar.gz", hash = "sha256:4855c2458d6904829bd34c299f11fdeed7cfefbf8a2c522e4caea6cd76b3171e"},
 ]
 
 [[package]]
@@ -391,6 +391,26 @@ doc = ["cairosvg (>=2.5.2,<3.0.0)", "mdx-include (>=1.4.1,<2.0.0)", "mkdocs (>=1
 test = ["black (>=22.3.0,<23.0.0)", "coverage (>=6.2,<7.0)", "isort (>=5.0.6,<6.0.0)", "mypy (==0.910)", "pytest (>=4.4.0,<8.0.0)", "pytest-cov (>=2.10.0,<5.0.0)", "pytest-sugar (>=0.9.4,<0.10.0)", "pytest-xdist (>=1.32.0,<4.0.0)", "rich (>=10.11.0,<14.0.0)", "shellingham (>=1.3.0,<2.0.0)"]
 
 [[package]]
+name = "typer-cli"
+version = "0.0.14"
+description = "Run Typer scripts with completion, without having to create a package, using Typer CLI."
+optional = false
+python-versions = ">=3.7"
+files = []
+develop = false
+
+[package.dependencies]
+colorama = ">=0.4.3,<=0.5.0"
+shellingham = ">=1.3.2,<=1.5.0"
+typer = ">=0.4.0,<=0.9.0"
+
+[package.source]
+type = "git"
+url = "https://github.com/Patarimi/typer-cli.git"
+reference = "master"
+resolved_reference = "f44b547a0b9ea71e5c7b2dc7d4c1ab1212394e5e"
+
+[[package]]
 name = "types-pyyaml"
 version = "6.0.12.12"
 description = "Typing stubs for PyYAML"
@@ -415,4 +435,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "1a0c2bd8aa2931994beed53d420cdf420f8ad28c87e85b9444374c55c5081569"
+content-hash = "746eb459acf55b369a22449c7a04e0287688cf64972013cd6fc6f8ed44e6ae8f"

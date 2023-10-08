@@ -91,7 +91,7 @@ def delete(
     ] = False,
 ):
     """
-    Delete paths by their keys from project. This will not affect original
+    Delete paths by their path names from project. This will not affect original
     files or directories.
     """
 
