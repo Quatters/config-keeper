@@ -38,7 +38,10 @@ def print_version(
     ] = False,
 ):
     if version:
-        console.print(importlib.metadata.version('config-keeper2'))
+        console.print(
+            importlib.metadata.version('config-keeper2'),
+            highlight=False,
+        )
         raise typer.Exit
 
 
