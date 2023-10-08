@@ -21,6 +21,8 @@ def _test_config() -> config.TConfig:
 
 def test_path_arg_regex():
     assert path_arg_regex.match('valid:~/arg/любой язык.test')
+    assert path_arg_regex.match('my_config.ini:~/arg/любой язык.test')
+    assert path_arg_regex.match('my_config 2.ini:~/arg/любой язык.test')
 
 
 def test_add():
