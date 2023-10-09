@@ -108,7 +108,7 @@ def delete(
     if confirm:
         console.print('You are about delete the following project:\n')
         console.print(yaml.dump({project: conf['projects'][project]}))
-        if not typer.confirm('Confirm?'):
+        if not typer.confirm('Proceed?', default=True):
             raise typer.Exit
 
     del conf['projects'][project]

@@ -159,7 +159,7 @@ def test_delete():
         '  branch: custom\n'
         '  paths: {}\n'
         '  repository: invalid/repo\n\n'
-        'Confirm? [y/N]: n\n'
+        'Proceed? [Y/n]: n\n'
     )
     assert config.load() == test_config
 
@@ -172,7 +172,7 @@ def test_delete():
         '  branch: custom\n'
         '  paths: {}\n'
         '  repository: invalid/repo\n\n'
-        'Confirm? [y/N]: y\n'
+        'Proceed? [Y/n]: y\n'
         'Project "test1" deleted.\n'
     )
     assert config.load() == {
