@@ -361,6 +361,40 @@ def test_pull_overwrites_original_files():
     assert (source_dir / 'some_dir' / 'some_dir_file').is_file()
 
 
+def test_pull_creates_file_if_it_not_exists():
+    repo = create_repo()
+    dest = create_dir()
+
+    config.save({
+        'projects': {
+            'test1': {
+                'repository': str(repo),
+                'branch': 'my_branch',
+                'paths': {
+                    'somedir': str(dest / 'somedir'),
+                    'somefile': str(dest / 'somefile'),
+                },
+            },
+        },
+    })
+
+    run_cmd(['git', '-C', str(repo), 'checkout', '-b', 'my_branch'])
+
+    (repo / 'somefile').touch()
+    (repo / 'somedir').mkdir()
+    (repo / 'somedir' / 'somefile2').touch()
+
+    run_cmd(['git', '-C', str(repo), 'add', '.'])
+    run_cmd(['git', '-C', str(repo), 'commit', '-m', 'some message'])
+
+    result = invoke(['pull', 'test1', '--no-ask'])
+    assert result.exit_code == 0, result.stdout
+
+    assert (dest / 'somefile').is_file()
+    assert (dest / 'somedir').is_dir()
+    assert (dest / 'somedir' / 'somefile2').is_file()
+
+
 def test_pull_with_ask():
     repo = create_repo()
     source_dir = create_dir()

@@ -1,4 +1,5 @@
 import functools
+import os
 import re
 import subprocess
 import typing as t
@@ -46,6 +47,31 @@ def check_if_project_exists(project: str, conf: config.TConfig):
 
 def get_type(typehint: type | t.GenericAlias) -> type:
     return getattr(typehint, '__origin__', typehint)
+
+
+def find_not_accessible_parent(path: Path) -> Path | None:
+    for parent in path.parents[::-1]:
+        if not os.access(parent, os.X_OK):
+            return parent
+    return None  # nocv
+
+
+def check_if_copyable(path: Path) -> tuple[bool, str]:
+    if path.is_file():
+        if not os.access(path, os.R_OK):
+            return False, f'{path} has no read permission'
+    elif path.is_dir():
+        if not os.access(path, os.X_OK):
+            return False, f'{path} has no execute permission'
+    else:  # nocv
+        raise ValueError(path)
+    return True, ''
+
+
+def check_if_writeable(path: Path) -> tuple[bool, str]:
+    if not os.access(path, os.W_OK):
+        return False, f'{path} has no write permission'
+    return True, ''
 
 
 ReportLevel = t.Literal['skip', 'warning', 'error', 'critical']
@@ -127,6 +153,9 @@ ProjectReportType = t.Literal[
     'empty_paths',
     'type_mismatch',
     'value_constraint',
+    'not_copyable_path',
+    'not_writeable_path',
+    'path_parents_access',
 ]
 
 
@@ -144,6 +173,9 @@ class ProjectValidator(Validator):
         empty_paths: ReportLevel = 'warning',
         type_mismatch: ReportLevel = 'critical',
         value_constraint: ReportLevel = 'error',
+        not_copyable_path: ReportLevel = 'error',
+        not_writeable_path: ReportLevel = 'error',
+        path_parents_access: ReportLevel = 'error',
     ):
         super().__init__(conf)
         self.path_existence = path_existence
@@ -155,6 +187,9 @@ class ProjectValidator(Validator):
         self.empty_paths = empty_paths
         self.type_mismatch = type_mismatch
         self.value_constraint = value_constraint
+        self.not_copyable_path = not_copyable_path
+        self.not_writeable_path = not_writeable_path
+        self.path_parents_access = path_parents_access
 
     def validate(self, project: str) -> bool:
         check_if_project_exists(project, self.conf)
@@ -218,15 +253,43 @@ class ProjectValidator(Validator):
                 f'"projects.{project}.paths.{path_name}" ({path}) is not a '
                 f'{TYPENAME[str]}.'
             ))
-        elif not path_name_regex.match(path_name):
+            return
+        if not path_name_regex.match(path_name):
             self._report('value_constraint', (
                 f'"projects.{project}.paths.{path_name}" is not a valid path '
                 'name.'
             ))
-        elif not Path(path).exists():
-            self._report('path_existence', (
-                f'"projects.{project}.paths.{path_name}" ({path}) does not '
-                'exist.'
+            return
+
+        resolved_path = Path(path).expanduser().resolve()
+        try:
+            if not Path(resolved_path).exists():
+                self._report('path_existence', (
+                    f'"projects.{project}.paths.{path_name}" ({path}) does not '
+                    'exist.'
+                ))
+                return
+        except PermissionError:
+            parent = find_not_accessible_parent(resolved_path)
+            if parent is not None:
+                self._report('path_parents_access', (
+                    f'"projects.{project}.paths.{path_name}" is not '
+                    f'accessible because {parent} has no execute permission.'
+                ))
+                return
+
+        is_copyable, reason = check_if_copyable(resolved_path)
+        if not is_copyable:
+            self._report('not_copyable_path', (
+                f'"projects.{project}.paths.{path_name}" is not '
+                f'copyable because {reason}.'
+            ))
+
+        is_writable, reason = check_if_writeable(resolved_path)
+        if not is_writable:
+            self._report('not_writeable_path', (
+                f'"projects.{project}.paths.{path_name}" is not '
+                f'writeable because {reason}.'
             ))
 
     def _validate_repository(self, repository: t.Any, project: str):
