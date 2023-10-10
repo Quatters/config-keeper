@@ -3,6 +3,7 @@ import typing as t
 
 import typer
 import yaml
+from rich.control import Control
 
 from config_keeper import config, console, settings
 from config_keeper import exceptions as exc
@@ -154,11 +155,15 @@ def list_(
 
 
 def _check_remote(repository: str):
-    console.print(f'Checking {repository}...', end=' ')
+    msg = f'Checking {repository}...'
+    console.print(msg)
     try:
-        ping_remote(repository, log=True)
+        ping_remote(repository, capture=True)
+        console.control(Control.move(y=-1, x=len(msg)+1))
         console.print('OK', style='green')
     except subprocess.CalledProcessError as exc:
-        print_error(f'\n\n{exc.stderr}')
+        msg = exc.stdout + exc.stderr
+        msg = '\n    ' + msg.replace('\n', '\n    ')
+        print_error(msg)
         if not typer.confirm('Do you want to continue?'):
             raise typer.Exit from exc

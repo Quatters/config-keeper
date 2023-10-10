@@ -28,7 +28,7 @@ def test_create():
     assert 'Repository:' in result.stdout
     assert 'Branch [main]:' in result.stdout
     assert 'Checking' in result.stdout
-    assert '... OK' in result.stdout
+    assert 'OK' in result.stdout
     assert 'Project "test1" saved.' in result.stdout
     assert config.load() == {
         'projects': {
@@ -47,7 +47,7 @@ def test_create():
     ], input='y\ny\n')
     assert result.exit_code == 0, result.stdout
     assert 'Checking' in result.stdout
-    assert '... Error: \n\n' in result.stdout
+    assert 'Error:' in result.stdout
     assert 'Do you want to continue? [y/N]:' in result.stdout
     assert 'Project "test1" already exists.' in result.stdout
     assert 'Would you like to overwrite it? [y/N]:' in result.stdout
@@ -69,7 +69,7 @@ def test_create():
     ], input='n\n')
     assert result.exit_code == 0, result.stdout
     assert 'Checking' in result.stdout
-    assert '... OK' in result.stdout
+    assert 'OK' in result.stdout
     assert 'Project "test1" already exists.' in result.stdout
     assert 'Would you like to overwrite it? [y/N]:' in result.stdout
     assert config.load() == {
@@ -130,7 +130,7 @@ def test_update():
     ])
     assert result.exit_code == 0
     assert 'Checking' in result.stdout
-    assert '... OK' in result.stdout
+    assert 'OK' in result.stdout
     assert 'Project "test1" saved.' in result.stdout
 
     # update repository (exit)
@@ -138,7 +138,8 @@ def test_update():
         'project', 'update', 'test1', '--repository', 'invalid',
     ], input='n\n')
     assert result.exit_code == 0
-    assert result.stdout.startswith('Checking invalid... Error: \n\n')
+    assert result.stdout.startswith('Checking invalid...')
+    assert 'Error:' in result.stdout
     assert result.stdout.endswith('Do you want to continue? [y/N]: n\n')
 
 

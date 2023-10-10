@@ -26,10 +26,10 @@ path_regex = re.compile(r'^[\w\/~\-\. ]+$')
 def ping_remote(
     repository: str,
     *,
-    log: bool = False,
+    capture: bool = False,
 ) -> subprocess.CompletedProcess[bytes] | subprocess.CompletedProcess[str]:
     cmd = ['git', 'ls-remote', repository, 'HEAD']
-    if log:
+    if capture:
         return subprocess.run(cmd, check=True, capture_output=True, text=True)
     return subprocess.run(
         cmd,
