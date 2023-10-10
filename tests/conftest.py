@@ -3,14 +3,16 @@ import shutil
 import pytest
 from config_keeper import settings
 
-from tests.helpers import TMP_DIR, id_generator
+from tests.helpers import TMP_DIR, id_generator, run_cmd
 
 get_config_file_id = id_generator()
 
 
 @pytest.fixture(scope='session', autouse=True)
 def _setup_session():
-    shutil.rmtree(TMP_DIR, ignore_errors=True)
+    if TMP_DIR.exists():
+        run_cmd(['chmod', '-R', '777', str(TMP_DIR)])
+        shutil.rmtree(TMP_DIR)
     TMP_DIR.mkdir(parents=True)
 
 

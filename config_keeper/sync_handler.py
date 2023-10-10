@@ -101,7 +101,7 @@ class SyncHandler:
 
         paths = self.conf['projects'][self.project]['paths']
         for path_name, str_path in paths.items():
-            path = Path(str_path)
+            path = Path(str_path).expanduser().resolve()
             dest = str(directory / path_name)
             copy_args = (str_path, dest)
             if path.is_file():
@@ -115,7 +115,7 @@ class SyncHandler:
 
         for path_name, str_path in paths.items():
             source = directory / path_name
-            dest = Path(str_path)
+            dest = Path(str_path).expanduser().resolve()
             copy_args = (str(source), str_path)
             if source.exists():
                 if dest.is_file():

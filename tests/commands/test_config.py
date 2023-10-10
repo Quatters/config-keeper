@@ -3,7 +3,7 @@ from uuid import uuid1
 
 from config_keeper import config, settings
 
-from tests.helpers import invoke
+from tests.helpers import create_dir, create_file, create_repo, invoke
 
 
 def test_path():
@@ -86,6 +86,94 @@ def test_validate():
         '\nCritical: "projects" is not a map.\n'
     )
 
+
+def test_validate_files_permissions():
+    file_without_read_perm = create_file(
+        name='file_without_read_perm',
+    )
+    file_without_write_perm = create_file(
+        name='file_without_write_perm',
+    )
+    dir_without_write_perm = create_dir(
+        name='dir_without_write_perm',
+    )
+    dir_without_exec_perm = create_dir(
+        name='dir_without_exec_perm',
+    )
+    file_in_dir = create_file(
+        parent=dir_without_exec_perm,
+        name='file_in_dir',
+    )
+
+    file_without_read_perm.chmod(0o333)
+    file_without_write_perm.chmod(0o444)
+    dir_without_exec_perm.chmod(0o666)
+    dir_without_write_perm.chmod(0o555)
+
+    repo = create_repo()
+
+    config.save({
+        'projects': {
+            'test1': {
+                'branch': 'mybranch',
+                'repository': str(repo),
+                'paths': {
+                    'file_without_read_perm': str(file_without_read_perm),
+                    'file_without_write_perm': str(file_without_write_perm),
+                    'file_in_dir': str(file_in_dir),
+                    'dir_without_exec_perm': str(dir_without_exec_perm),
+                    'dir_without_write_perm': str(dir_without_write_perm),
+                },
+            },
+        },
+    })
+
+    result = invoke(['config', 'validate'])
+    assert result.exit_code == 201
+    formatted_stdout = result.stdout.replace('\n', ' ').replace('  ', ' ')
+
+    # parse paths because if they are too long then in random place
+    # \n char may appear
+    # e.g. /long/path -> /long/p\nath
+    replaced_stdout = re.sub(
+        r'(\/[\w \/]+) has',
+        '<path> has',
+        formatted_stdout,
+    )
+
+    assert (
+        'Error: "projects.test1.paths.file_without_read_perm" is not '
+        'copyable because <path> has no read '
+        'permission.'
+    ) in replaced_stdout
+    assert (
+        'Error: "projects.test1.paths.file_in_dir" is not accessible '
+        'because <path> has no execute permission.'
+    ) in replaced_stdout
+    assert (
+        'Error: "projects.test1.paths.dir_without_exec_perm" is not '
+        'copyable because <path> has no '
+        'execute permission.'
+    ) in replaced_stdout
+    assert (
+        'Error: "projects.test1.paths.file_without_write_perm" is not '
+        'writeable because <path> has no write permission.'
+    ) in replaced_stdout
+    assert (
+        'Error: "projects.test1.paths.dir_without_write_perm" is not writeable '
+        'because <path> has no write permission.'
+    ) in replaced_stdout
+
+    # check paths separately
+    path_strings = {
+        s.replace(' has', '').replace(' ', '')
+        for s in re.findall(r'(\/[\w \/]+) has', formatted_stdout)
+    }
+    assert str(file_without_read_perm) in path_strings
+    assert str(file_in_dir.parent) in path_strings
+    assert str(dir_without_exec_perm) in path_strings
+    assert str(file_without_write_perm) in path_strings
+    assert str(dir_without_write_perm) in path_strings
 
 def test_config_is_not_a_valid_yaml():
     settings.CONFIG_FILE.write_text('%$%$# not valid yaml\n\n\n\n')

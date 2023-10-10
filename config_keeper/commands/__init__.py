@@ -57,7 +57,12 @@ def push(
     """
 
     conf = config.load()
-    validator = ProjectValidator(conf, path_existence='error')
+    validator = ProjectValidator(
+        conf,
+        path_existence='error',
+        not_copyable_path='error',
+        not_writeable_path='skip',
+    )
 
     _validate_projects(projects, validator)
 
@@ -90,7 +95,12 @@ def pull(
     """
 
     conf = config.load()
-    validator = ProjectValidator(conf, path_existence='skip')
+    validator = ProjectValidator(
+        conf,
+        path_existence='skip',
+        not_copyable_path='skip',
+        not_writeable_path='error',
+    )
 
     _validate_projects(projects, validator)
 

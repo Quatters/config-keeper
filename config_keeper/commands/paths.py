@@ -57,8 +57,7 @@ def add(
         if not match_:
             msg = (
                 f'{raw_path} is an invalid argument. Format must be as '
-                'follows:\n\n'
-                'key:/path/to/file/or/folder'
+                'follows: path_name:/path/to/file/or/folder'
             )
             raise exc.InvalidArgumentFormatError(msg)
         key = match_.group(1)
