@@ -131,28 +131,49 @@ def test_validate_files_permissions():
     result = invoke(['config', 'validate'])
     assert result.exit_code == 201
     formatted_stdout = result.stdout.replace('\n', ' ').replace('  ', ' ')
+
+    # parse paths because if they are too long then in random place
+    # \n char may appear
+    # e.g. /long/path -> /long/p\nath
+    replaced_stdout = re.sub(
+        r'(\/[\w \/]+) has',
+        '<path> has',
+        formatted_stdout,
+    )
+
     assert (
         'Error: "projects.test1.paths.file_without_read_perm" is not '
-        f'copyable because {file_without_read_perm} has no read '
+        'copyable because <path> has no read '
         'permission.'
-    ) in formatted_stdout
+    ) in replaced_stdout
     assert (
-        f'Error: "projects.test1.paths.file_in_dir" is not accessible '
-        f'because {file_in_dir.parent} has no execute permission.'
-    ) in formatted_stdout
+        'Error: "projects.test1.paths.file_in_dir" is not accessible '
+        'because <path> has no execute permission.'
+    ) in replaced_stdout
     assert (
-        f'Error: "projects.test1.paths.dir_without_exec_perm" is not '
-        f'copyable because {dir_without_exec_perm} has no '
+        'Error: "projects.test1.paths.dir_without_exec_perm" is not '
+        'copyable because <path> has no '
         'execute permission.'
-    ) in formatted_stdout
+    ) in replaced_stdout
     assert (
         'Error: "projects.test1.paths.file_without_write_perm" is not '
-        f'writeable because {file_without_write_perm} has no write permission.'
-    ) in formatted_stdout
+        'writeable because <path> has no write permission.'
+    ) in replaced_stdout
     assert (
         'Error: "projects.test1.paths.dir_without_write_perm" is not writeable '
-        f'because {dir_without_write_perm} has no write permission.'
-    ) in formatted_stdout
+        'because <path> has no write permission.'
+    ) in replaced_stdout
+
+    # check paths separately
+    path_strings = {
+        s.replace(' has', '').replace(' ', '')
+        for s in re.findall(r'(\/[\w \/]+) has', formatted_stdout)
+    }
+    assert str(file_without_read_perm) in path_strings
+    assert str(file_in_dir.parent) in path_strings
+    assert str(dir_without_exec_perm) in path_strings
+    assert str(file_without_write_perm) in path_strings
+    assert str(dir_without_write_perm) in path_strings
 
 def test_config_is_not_a_valid_yaml():
     settings.CONFIG_FILE.write_text('%$%$# not valid yaml\n\n\n\n')
