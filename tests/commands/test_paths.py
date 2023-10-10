@@ -41,11 +41,9 @@ def test_add():
         'paths', 'add', '--project', 'test1', 'invalid_arg::',
     ])
     assert result.exit_code == 205
-    assert result.stdout == (
-        'Error: invalid_arg:: is an invalid argument. Format must be as '
-        'follows:\n\n'
-        'key:/path/to/file/or/folder\n'
-    )
+    assert 'Error: invalid_arg:: is an invalid argument.' in result.stdout
+    assert 'Format must be as follows:' in result.stdout
+    assert 'path_name:/path/to/file/or/folder' in result.stdout
     assert config.load() == current_config
 
     some_file = create_file()
