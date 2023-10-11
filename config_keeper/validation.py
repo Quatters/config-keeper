@@ -113,7 +113,7 @@ RootReportType = t.Literal['unknown_param', 'type_mismatch']
 class RootValidator(Validator):
     def __init__(
         self,
-        conf: dict[t.Any, t.Any],
+        conf: config.TConfig | dict[t.Any, t.Any],
         *,
         unknown_param: ReportLevel = 'warning',
         type_mismatch: ReportLevel = 'critical',
