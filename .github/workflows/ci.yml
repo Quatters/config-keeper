@@ -8,7 +8,40 @@ on:
   workflow_dispatch:
 
 jobs:
-  lint-and-typecheck:
+  lint:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11"]
+        poetry-version: ["1.6.1"]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ matrix.poetry-version }}
+
+      - uses: actions/cache@v3
+        name: Define cache
+        with:
+          path: ./.venv
+          key: venv-${{ hashFiles('poetry.lock') }}
+
+      - name: Install project dependencies
+        run: poetry install
+
+      - name: Lint
+        run: poetry run ruff check .
+
+  typecheck:
     strategy:
       fail-fast: false
       matrix:
@@ -40,9 +73,6 @@ jobs:
 
       - name: Typecheck
         run: poetry run pyright
-
-      - name: Lint
-        run: poetry run ruff check .
 
   test:
     strategy:
