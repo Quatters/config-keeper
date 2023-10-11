@@ -25,6 +25,9 @@ cli.add_typer(project_cli, name='project', help='Manage projects.')
 cli.add_typer(config_cli, name='config', help='Manage config of this tool.')
 cli.add_typer(paths_cli, name='paths', help='Manage project paths.')
 
+ask_help = """
+    Ask confirmation before operating.
+"""
 
 @cli.callback(invoke_without_command=True)
 def print_version(
@@ -48,7 +51,7 @@ def print_version(
 @cli.command()
 def push(
     projects: t.List[str],  # noqa: UP006
-    ask: t.Annotated[bool, typer.Option()] = True,
+    ask: t.Annotated[bool, typer.Option(help=ask_help)] = True,
 ):
     """
     Push files or directories of projects to their repositories. This operation
@@ -85,7 +88,7 @@ def push(
 @cli.command()
 def pull(
     projects: t.List[str],  # noqa: UP006
-    ask: t.Annotated[bool, typer.Option()] = True,
+    ask: t.Annotated[bool, typer.Option(help=ask_help)] = True,
 ):
     """
     Pull all files and directories of projects from their repositories and move

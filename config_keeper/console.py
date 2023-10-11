@@ -1,5 +1,8 @@
 from rich.console import Console
-from rich.highlighter import ReprHighlighter, _combine_regex
+from rich.highlighter import (
+    ReprHighlighter,
+    _combine_regex,  # pyright: ignore [reportPrivateUsage]
+)
 
 
 class DefaultHighlighter(ReprHighlighter):

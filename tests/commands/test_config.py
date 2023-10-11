@@ -83,7 +83,7 @@ def test_validate():
     result = invoke(['config', 'validate'])
     assert result.exit_code == 201
     assert result.stdout == (
-        '\nCritical: "projects" is not a map.\n'
+        'Critical: "projects" is not a map.\n'
     )
 
 
@@ -175,6 +175,7 @@ def test_validate_files_permissions():
     assert str(file_without_write_perm) in path_strings
     assert str(dir_without_write_perm) in path_strings
 
+
 def test_config_is_not_a_valid_yaml():
     settings.CONFIG_FILE.write_text('%$%$# not valid yaml\n\n\n\n')
 
@@ -207,3 +208,19 @@ def test_config_root_is_not_a_map():
     assert 'Tip: you can use' in result.stdout
     assert f'> {settings.EXECUTABLE_NAME} config validate' in result.stdout
     assert 'after.' in result.stdout
+
+
+def test_config_projects_is_not_a_map():
+    settings.CONFIG_FILE.write_text('projects: string')
+
+    result = invoke(['config', 'validate'])
+    assert result.exit_code == 201
+    assert 'Critical: "projects" is not a map.' in result.stdout
+
+
+def test_empty_config_is_valid():
+    settings.CONFIG_FILE.write_text('{}')
+
+    result = invoke(['config', 'validate'])
+    assert result.exit_code == 0
+    assert config.load() == {'projects': {}}
