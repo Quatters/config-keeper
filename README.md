@@ -1,8 +1,9 @@
 # config-keeper
 
+[![CI](https://github.com/Quatters/config-keeper/actions/workflows/ci.yml/badge.svg?event=push)](https://github.com/Quatters/config-keeper/actions/workflows/ci.yml)
+![Codecov](https://img.shields.io/codecov/c/github/Quatters/config-keeper)
 ![PyPI - Version](https://img.shields.io/pypi/v/config-keeper2)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/config-keeper2)
-![Codecov](https://img.shields.io/codecov/c/github/Quatters/config-keeper)
 
 User-friendly CLI for keeping your personal files or directories in
 a repository.
