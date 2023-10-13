@@ -6,7 +6,7 @@ import typer
 
 from config_keeper import config
 from config_keeper import exceptions as exc
-from config_keeper.commands import helps
+from config_keeper.commands.common import autocompletion, helps
 from config_keeper.console_helpers import print_project_saved
 from config_keeper.validation import check_if_project_exists
 
@@ -35,7 +35,13 @@ ignore_missing_help = """
 
 @cli.command()
 def add(
-    project: t.Annotated[str, typer.Option(help=helps.project)],
+    project: t.Annotated[
+        str,
+        typer.Option(
+            help=helps.project,
+            autocompletion=autocompletion.project,
+        ),
+    ],
     paths: t.Annotated[
         t.List[str],  # noqa: UP006
         typer.Argument(help=paths_help),
@@ -79,10 +85,19 @@ def add(
 
 @cli.command()
 def delete(
-    project: t.Annotated[str, typer.Option(help=helps.project)],
+    project: t.Annotated[
+        str,
+        typer.Option(
+            help=helps.project,
+            autocompletion=autocompletion.project,
+        ),
+    ],
     path_names: t.Annotated[
         t.List[str],   # noqa: UP006
-        typer.Argument(help=path_names_help),
+        typer.Argument(
+            help=path_names_help,
+            autocompletion=autocompletion.path_name,
+        ),
     ],
     ignore_missing: t.Annotated[
         bool,

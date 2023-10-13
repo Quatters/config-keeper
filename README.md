@@ -23,6 +23,7 @@ repository
   * [Using pip](#using-pip)
 * [Usage](#usage)
   * [Quick start](#quick-start)
+  * [Autocompletion](#autocompletion)
   * [CLI Reference](#cli-reference)
 
 ## Use cases
@@ -127,6 +128,21 @@ config-keeper pull myproject
 
 If you confirmed replacing, the ``~/configs/my_config.ini`` file now should
 be the same as in repository one.
+
+### Autocompletion
+
+Run
+
+```shell
+config-keeper --install-completion
+```
+
+and reload shell.
+
+**NOTE**: there is a
+[known issue](https://github.com/tiangolo/typer/issues/54#issue-574856032) with
+`zsh`. As a workaround you can add `compinit -D` to the end of your `.zshrc`
+after installing completion.
 
 ### CLI Reference
 

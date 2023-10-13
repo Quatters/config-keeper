@@ -51,6 +51,11 @@ pyright = "^1.1.331"
 git = "https://github.com/Patarimi/typer-cli.git"
 branch = "master"
 
+[tool.pytest.ini_options]
+filterwarnings = [
+    "once:'autocompletion' is renamed to 'shell_complete'.*:DeprecationWarning"
+]
+
 [tool.ruff]
 select = [
     'ANN',

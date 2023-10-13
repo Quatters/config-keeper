@@ -189,8 +189,11 @@ class ProjectValidator(Validator):
         self.path_parents_access = path_parents_access
 
     def validate(self, project: str) -> bool:
-        check_if_project_exists(project, self.conf)
-
+        """
+        Validates project config. Project must exist. After calling,
+        ``.is_valid`` attribute shows either project is valid. Call
+        ``print_errors`` to print all errors to stdout.
+        """
         if not isinstance(self.conf['projects'][project], dict):
             self._critical(
                 f'"projects.{project}" is not a {TYPENAME[dict]}.',
