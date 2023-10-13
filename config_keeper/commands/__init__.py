@@ -10,7 +10,7 @@ from config_keeper.commands.project import cli as project_cli
 from config_keeper import config, console, settings
 from config_keeper import exceptions as exc
 from config_keeper.sync_handler import SyncHandler
-from config_keeper.validation import ProjectValidator
+from config_keeper.validation import ProjectValidator, check_if_project_exists
 from config_keeper.progress import spinner
 
 if t.TYPE_CHECKING:
@@ -124,6 +124,9 @@ def _validate_projects(
     projects: list[str],
     validator: ProjectValidator,
 ):
+    for project in projects:
+        check_if_project_exists(project, validator.conf)
+
     with spinner() as s:
         prev_task: TaskID | None = None
         for project in projects:
