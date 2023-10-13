@@ -29,10 +29,14 @@ class InvalidConfigError(PublicError):
 
 class ProjectDoesNotExistError(PublicError):
     exit_code = 203
+    message = 'project "{project}" does not exist.'
 
     def __init__(self, project: str, *, tip: str | None = None):
         self.project = project
-        super().__init__(f'project "{project}" does not exist.', tip=tip)
+        super().__init__(
+            self.message.format(project=project),
+            tip=tip,
+        )
 
 
 class AtLeastOneOptionMustBeProvidedError(PublicError):

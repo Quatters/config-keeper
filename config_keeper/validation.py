@@ -45,7 +45,7 @@ def check_if_project_exists(project: str, conf: config.TConfig):
         raise exc.ProjectDoesNotExistError(project)
 
 
-def get_type(typehint: type | t.GenericAlias) -> type:
+def get_type(typehint: type) -> type:
     return getattr(typehint, '__origin__', typehint)
 
 
@@ -106,10 +106,6 @@ class Validator:
         self.is_valid = False
         self._message_printers.append(functools.partial(print_critical, msg))
 
-    def _report(self, report_type: str, msg: str):
-        level: ReportLevel = getattr(self, report_type)
-        getattr(self, f'_{level}')(msg)
-
 
 RootReportType = t.Literal['unknown_param', 'type_mismatch']
 
@@ -117,7 +113,7 @@ RootReportType = t.Literal['unknown_param', 'type_mismatch']
 class RootValidator(Validator):
     def __init__(
         self,
-        conf: config.TConfig,
+        conf: config.TConfig | dict[t.Any, t.Any],
         *,
         unknown_param: ReportLevel = 'warning',
         type_mismatch: ReportLevel = 'critical',
@@ -128,7 +124,7 @@ class RootValidator(Validator):
 
     def validate(self) -> bool:
         for param, value in self.conf.items():
-            if typehint := config.TConfig.__annotations__.get(param, None):
+            if typehint := config.TConfigBound.__annotations__.get(param, None):
                 realtype = get_type(typehint)
                 if not isinstance(value, realtype):
                     self._report('type_mismatch', (
@@ -140,7 +136,8 @@ class RootValidator(Validator):
         return self.is_valid
 
     def _report(self, report_type: RootReportType, msg: str):
-        super()._report(report_type, msg)
+        level: ReportLevel = getattr(self, report_type)
+        getattr(self, f'_{level}')(msg)
 
 
 ProjectReportType = t.Literal[
@@ -192,8 +189,11 @@ class ProjectValidator(Validator):
         self.path_parents_access = path_parents_access
 
     def validate(self, project: str) -> bool:
-        check_if_project_exists(project, self.conf)
-
+        """
+        Validates project config. Project must exist. After calling,
+        ``.is_valid`` attribute shows either project is valid. Call
+        ``print_errors`` to print all errors to stdout.
+        """
         if not isinstance(self.conf['projects'][project], dict):
             self._critical(
                 f'"projects.{project}" is not a {TYPENAME[dict]}.',
@@ -208,7 +208,7 @@ class ProjectValidator(Validator):
         return self.is_valid
 
     def _check_missing_params(self, project: str):
-        required_params = set(config.TProject.__annotations__.keys())
+        required_params = set(config.TProjectBound.__annotations__.keys())
         actual_params = set(self.conf['projects'][project].keys())
         for param in sorted(required_params - actual_params):
             self._report('missing_param', (
@@ -221,7 +221,7 @@ class ProjectValidator(Validator):
         value: t.Any,
         project: str,
     ):
-        typehint = config.TProject.__annotations__.get(param, None)
+        typehint = config.TProjectBound.__annotations__.get(param, None)
         if not typehint:
             self._report('unknown_param', (
                 f'unknown parameter "projects.{project}.{param}".'
@@ -236,7 +236,7 @@ class ProjectValidator(Validator):
             return
 
         if not value:
-            self._report(f'empty_{param}', (
+            self._report(f'empty_{param}', (  # type: ignore
                 f'"projects.{project}.{param}" is empty.'
             ))
             return
@@ -247,7 +247,7 @@ class ProjectValidator(Validator):
             for path_name, path in sorted(value.items()):
                 self._validate_path(path_name, path, project)
 
-    def _validate_path(self, path_name: str, path: str, project: str):
+    def _validate_path(self, path_name: str, path: t.Any, project: str):
         if not isinstance(path, str):
             self._report('type_mismatch', (
                 f'"projects.{project}.paths.{path_name}" ({path}) is not a '
@@ -302,4 +302,5 @@ class ProjectValidator(Validator):
             ))
 
     def _report(self, report_type: ProjectReportType, msg: str):
-        super()._report(report_type, msg)
+        level: ReportLevel = getattr(self, report_type)
+        getattr(self, f'_{level}')(msg)

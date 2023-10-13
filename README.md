@@ -1,8 +1,9 @@
 # config-keeper
 
+[![CI](https://github.com/Quatters/config-keeper/actions/workflows/ci.yml/badge.svg?event=push)](https://github.com/Quatters/config-keeper/actions/workflows/ci.yml)
+![Codecov](https://img.shields.io/codecov/c/github/Quatters/config-keeper)
 ![PyPI - Version](https://img.shields.io/pypi/v/config-keeper2)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/config-keeper2)
-![Codecov](https://img.shields.io/codecov/c/github/Quatters/config-keeper)
 
 User-friendly CLI for keeping your personal files or directories in
 a repository.
@@ -22,6 +23,7 @@ repository
   * [Using pip](#using-pip)
 * [Usage](#usage)
   * [Quick start](#quick-start)
+  * [Autocompletion](#autocompletion)
   * [CLI Reference](#cli-reference)
 
 ## Use cases
@@ -126,6 +128,21 @@ config-keeper pull myproject
 
 If you confirmed replacing, the ``~/configs/my_config.ini`` file now should
 be the same as in repository one.
+
+### Autocompletion
+
+Run
+
+```shell
+config-keeper --install-completion
+```
+
+and reload shell.
+
+**NOTE**: there is a
+[known issue](https://github.com/tiangolo/typer/issues/54#issue-574856032) with
+`zsh`. As a workaround you can add `compinit -D` to the end of your `.zshrc`
+after installing completion.
 
 ### CLI Reference
 

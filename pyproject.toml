@@ -45,16 +45,23 @@ pytest-cov = "^4.1.0"
 ruff = ">=0.0.291,<0.0.293"
 freezegun = "^1.2.2"
 types-pyyaml = "^6.0.12.12"
+pyright = "^1.1.331"
 
 [tool.poetry.group.dev.dependencies.typer-cli]
 git = "https://github.com/Patarimi/typer-cli.git"
 branch = "master"
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "once:'autocompletion' is renamed to 'shell_complete'.*:DeprecationWarning"
+]
 
 [tool.ruff]
 select = [
     'ANN',
     'B',
     'C4',
+    'C90',
     'COM',
     'E',
     'EM',
@@ -96,6 +103,14 @@ inline-quotes = "single"
 
 [tool.ruff.flake8-annotations]
 suppress-none-returning = true
+
+[tool.pyright]
+include = ["config_keeper/**"]
+pythonVersion = "3.11"
+pythonPlatform = "All"
+typeCheckingMode = "strict"
+reportUnusedImport = false
+reportUnknownArgumentType = 'warning'
 
 [tool.coverage.run]
 include = ["config_keeper/*"]

@@ -2,23 +2,29 @@ import typing as t
 
 import yaml
 
+from config_keeper import exceptions as exc
 from config_keeper import settings
 
 
-class TProject(t.TypedDict):
+class TProjectBound(t.TypedDict):
     repository: str
     branch: str
     paths: dict[str, str]
 
 
-class TConfig(t.TypedDict):
+TProject = TProjectBound | dict[str, t.Any]
+
+
+class TConfigBound(t.TypedDict):
     projects: dict[str, TProject]
 
 
-def defaults() -> TConfig:
-    return {
-        'projects': {},
-    }
+TConfig = TConfigBound | dict[str, t.Any]
+
+
+def populate_defaults(config: dict[str, t.Any]):
+    for key, type_ in TConfigBound.__annotations__.items():
+        config.setdefault(key, type_())
 
 
 def ensure_exists():
@@ -28,7 +34,6 @@ def ensure_exists():
 
 def load() -> TConfig:
     ensure_exists()
-    from config_keeper import exceptions as exc
     try:
         config = yaml.load(
             settings.CONFIG_FILE.read_bytes(),
@@ -40,12 +45,14 @@ def load() -> TConfig:
             'Please fix or remove it.'
         )
         tip = (
-            f'you can use\n> {settings.EXECUTABLE_NAME} config validate\n'
+            'you can use\n'
+            f'> {settings.EXECUTABLE_NAME} config validate\n'
             'after.'
         )
         raise exc.InvalidConfigError(msg, tip=tip) from e
-    if config is None:
-        return defaults()
+
+    config = config or {}
+
     if not isinstance(config, dict):
         msg = (
             f'the root object of {settings.CONFIG_FILE} config must be a map.\n'
@@ -56,6 +63,16 @@ def load() -> TConfig:
             'after.'
         )
         raise exc.InvalidConfigError(msg, tip=tip)
+
+    populate_defaults(config)
+
+    from config_keeper.validation import RootValidator
+    validator = RootValidator(config, unknown_param='skip')
+    is_valid = validator.validate()
+    validator.print_errors()
+    if not is_valid:
+        raise exc.InvalidConfigError
+
     return config
 
 

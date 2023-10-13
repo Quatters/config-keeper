@@ -7,7 +7,7 @@ from rich.control import Control
 
 from config_keeper import config, console, settings
 from config_keeper import exceptions as exc
-from config_keeper.commands import helps
+from config_keeper.commands.common import autocompletion, helps
 from config_keeper.console_helpers import print_error, print_project_saved
 from config_keeper.validation import check_if_project_exists, ping_remote
 
@@ -53,7 +53,13 @@ def create(
 
 @cli.command()
 def update(
-    project: t.Annotated[str, typer.Argument(help=helps.project)],
+    project: t.Annotated[
+        str,
+        typer.Argument(
+            help=helps.project,
+            autocompletion=autocompletion.project,
+        ),
+    ],
     repository: t.Annotated[
         t.Optional[str],  # noqa: UP007
         typer.Option(help=helps.repository),
@@ -93,7 +99,13 @@ def update(
 
 @cli.command()
 def delete(
-    project: t.Annotated[str, typer.Argument(help=helps.project)],
+    project: t.Annotated[
+        str,
+        typer.Argument(
+            help=helps.project,
+            autocompletion=autocompletion.project,
+        ),
+    ],
     confirm: t.Annotated[
         bool,
         typer.Option(help='Whether confirm before deleting.'),
@@ -118,7 +130,15 @@ def delete(
 
 
 @cli.command()
-def show(project: t.Annotated[str, typer.Argument(help=helps.project)]):
+def show(
+    project: t.Annotated[
+        str,
+        typer.Argument(
+            help=helps.project,
+            autocompletion=autocompletion.project,
+        ),
+    ],
+):
     """
     Show project config.
     """
@@ -146,6 +166,7 @@ def list_(
     if not conf['projects']:
         console.print('You have no projects. Create a new one using')
         console.print(f'> {settings.EXECUTABLE_NAME} project create')
+        raise typer.Exit
 
     if verbose:
         console.print(yaml.dump(conf['projects']))

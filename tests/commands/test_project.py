@@ -192,7 +192,7 @@ def test_delete():
     assert result.stdout == (
         'Project "test2" deleted.\n'
     )
-    assert config.load() == config.defaults()
+    assert config.load() == {'projects': {}}
 
 
 def test_show():

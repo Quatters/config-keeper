@@ -283,7 +283,7 @@ $ config-keeper pull [OPTIONS] PROJECTS...
 
 **Options**:
 
-* `--ask / --no-ask`: [default: ask]
+* `--ask / --no-ask`: Ask confirmation before operating.  [default: ask]
 * `--help`: Show this message and exit.
 
 ## `config-keeper push`
@@ -304,5 +304,5 @@ $ config-keeper push [OPTIONS] PROJECTS...
 
 **Options**:
 
-* `--ask / --no-ask`: [default: ask]
+* `--ask / --no-ask`: Ask confirmation before operating.  [default: ask]
 * `--help`: Show this message and exit.

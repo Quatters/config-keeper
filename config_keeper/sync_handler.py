@@ -16,7 +16,7 @@ def delete_dir(directory: str | Path):
     shutil.rmtree(str(directory), ignore_errors=True)
 
 
-def run_cmd(cmd: list[str]) -> subprocess.CompletedProcess:
+def run_cmd(cmd: list[str]) -> subprocess.CompletedProcess[str]:
     executable = shutil.which(cmd[0])
     if not executable:
         raise exc.ExecutableNotFoundError(cmd[0])
