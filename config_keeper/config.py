@@ -28,8 +28,11 @@ def populate_defaults(config: dict[str, t.Any]):
 
 
 def ensure_exists():
-    settings.CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
-    settings.CONFIG_FILE.touch()
+    try:
+        settings.CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+        settings.CONFIG_FILE.touch()
+    except OSError as e:
+        raise exc.PublicError(str(e)) from e
 
 
 def load() -> TConfig:
@@ -50,6 +53,8 @@ def load() -> TConfig:
             'after.'
         )
         raise exc.InvalidConfigError(msg, tip=tip) from e
+    except OSError as e:
+        raise exc.PublicError(str(e)) from e
 
     config = config or {}
 
