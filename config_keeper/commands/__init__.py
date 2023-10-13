@@ -19,6 +19,7 @@ if t.TYPE_CHECKING:
 cli = typer.Typer(
     name=settings.EXECUTABLE_NAME,
     help='CLI tool for keeping your personal config files in a repository',
+    pretty_exceptions_show_locals=False,
 )
 
 cli.add_typer(project_cli, name='project', help='Manage projects.')

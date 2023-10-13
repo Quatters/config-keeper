@@ -8,10 +8,6 @@ class ConfigKeeperError(Exception):
     pass
 
 
-class InternalError(ConfigKeeperError):
-    pass
-
-
 class PublicError(typer.Exit, ConfigKeeperError):
     exit_code = 255  # default
 

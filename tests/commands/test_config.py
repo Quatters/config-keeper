@@ -224,3 +224,20 @@ def test_empty_config_is_valid():
     result = invoke(['config', 'validate'])
     assert result.exit_code == 0
     assert config.load() == {'projects': {}}
+
+
+def test_oserror_for_config_file():
+    somefile = create_file()
+    somefile.chmod(0o333)
+    settings.CONFIG_FILE = somefile
+
+    result = invoke(['config', 'validate'])
+    assert result.exit_code == 255
+    assert 'Permission denied' in result.stdout
+
+    somedir = create_dir()
+    somedir.chmod(0o000)
+    settings.CONFIG_FILE = somedir / 'somefile'
+    result = invoke(['config', 'validate'])
+    assert result.exit_code == 255
+    assert 'Permission denied' in result.stdout
