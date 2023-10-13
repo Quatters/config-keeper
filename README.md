@@ -20,6 +20,7 @@ repository
 * [Use cases](#use-cases)
 * [Key features](#key-features)
 * [Install](#install)
+  * [Using pipx (recommended)](#using-pipx-recommended)
   * [Using pip](#using-pip)
 * [Usage](#usage)
   * [Quick start](#quick-start)
@@ -48,6 +49,14 @@ using ``validate`` command after
 * User-friendly error messages if something goes wrong
 
 ## Install
+
+### Using pipx (recommended)
+
+[Install ``pipx``](https://pypa.github.io/pipx/installation/) first.
+
+```shell
+pipx install config-keeper2
+```
 
 ### Using pip
 
