@@ -179,7 +179,10 @@ def list_(
 def rename(
     old_project: t.Annotated[
         str,
-        typer.Argument(help=helps.project),
+        typer.Argument(
+            help=helps.project,
+            autocompletion=autocompletion.project,
+        ),
     ],
     new_project: t.Annotated[
         str,
