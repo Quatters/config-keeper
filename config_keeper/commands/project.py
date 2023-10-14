@@ -5,10 +5,10 @@ import typer
 import yaml
 from rich.control import Control
 
-from config_keeper import config, console, settings
+from config_keeper import config, settings
 from config_keeper import exceptions as exc
 from config_keeper.commands.common import autocompletion, helps
-from config_keeper.console_helpers import print_error, print_project_saved
+from config_keeper.output import console, print_error, print_project_saved
 from config_keeper.validation import check_if_project_exists, ping_remote
 
 cli = typer.Typer()

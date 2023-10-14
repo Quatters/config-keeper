@@ -1,6 +1,6 @@
 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 
-from config_keeper.console import DefaultHighlighter
+from config_keeper.output import DefaultHighlighter
 
 
 def spinner() -> Progress:

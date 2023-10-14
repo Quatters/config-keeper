@@ -28,3 +28,27 @@ class DefaultHighlighter(ReprHighlighter):
 
 
 console = Console(highlighter=DefaultHighlighter())
+
+
+def print_project_saved(project: str):
+    console.print(f'Project "{project}" saved.')
+
+
+def print_warning(msg: str):
+    errconsole.print('Warning:', end=' ', style='yellow')
+    errconsole.print(msg)
+
+
+def print_error(msg: str):
+    errconsole.print('Error:', end=' ', style='red')
+    errconsole.print(msg)
+
+
+def print_critical(msg: str):
+    errconsole.print('Critical:', end=' ', style='violet')
+    errconsole.print(msg)
+
+
+def print_tip(msg: str):
+    console.print('Tip:', end=' ', style='yellow')
+    console.print(msg)

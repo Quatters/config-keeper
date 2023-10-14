@@ -1,7 +1,7 @@
 import typer
 
 from config_keeper import settings
-from config_keeper.console_helpers import print_error, print_tip
+from config_keeper.output import print_error, print_tip
 
 
 class ConfigKeeperError(Exception):

@@ -1,7 +1,8 @@
 import typer
 
-from config_keeper import config, console, settings
+from config_keeper import config, settings
 from config_keeper import exceptions as exc
+from config_keeper.output import console
 from config_keeper.progress import spinner
 from config_keeper.validation import ProjectValidator, RootValidator
 
