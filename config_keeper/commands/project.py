@@ -5,10 +5,10 @@ import typer
 import yaml
 from rich.control import Control
 
-from config_keeper import config, console, settings
+from config_keeper import config, settings
 from config_keeper import exceptions as exc
 from config_keeper.commands.common import autocompletion, helps
-from config_keeper.console_helpers import print_error, print_project_saved
+from config_keeper.output import console, print_error, print_project_saved
 from config_keeper.validation import check_if_project_exists, ping_remote
 
 cli = typer.Typer()
@@ -173,6 +173,40 @@ def list_(
     else:
         for project in conf['projects']:
             console.print(project)
+
+
+@cli.command()
+def rename(
+    old_project: t.Annotated[
+        str,
+        typer.Argument(
+            help=helps.project,
+            autocompletion=autocompletion.project,
+        ),
+    ],
+    new_project: t.Annotated[
+        str,
+        typer.Argument(help=helps.project),
+    ],
+):
+    """
+    Rename existing project.
+    """
+
+    if old_project == new_project:
+        msg = 'specify a different name.'
+        raise exc.InvalidArgumentError(msg)
+
+    conf = config.load()
+    check_if_project_exists(old_project, conf)
+
+    if new_project in conf['projects']:
+        raise exc.ProjectAlreadyExistsError(new_project)
+
+    conf['projects'][new_project] = conf['projects'].pop(old_project)
+    config.save(conf)
+
+    print_project_saved(new_project)
 
 
 def _check_remote(repository: str):

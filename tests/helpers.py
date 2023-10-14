@@ -9,7 +9,7 @@ from typer.testing import CliRunner
 
 TMP_DIR = (Path(tempfile.gettempdir()) / 'config_keeper_tests').resolve()
 
-cli_runner = CliRunner()
+cli_runner = CliRunner(mix_stderr=False)
 
 invoke = functools.partial(cli_runner.invoke, cli)
 

@@ -7,7 +7,8 @@ import typer
 from config_keeper.commands.config import cli as config_cli
 from config_keeper.commands.paths import cli as paths_cli
 from config_keeper.commands.project import cli as project_cli
-from config_keeper import config, console, settings
+from config_keeper import config, settings
+from config_keeper.output import console
 from config_keeper import exceptions as exc
 from config_keeper.sync_handler import SyncHandler
 from config_keeper.validation import ProjectValidator, check_if_project_exists
