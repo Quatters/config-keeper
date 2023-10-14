@@ -96,7 +96,7 @@ def delete(
         t.List[str],   # noqa: UP006
         typer.Argument(
             help=path_names_help,
-            autocompletion=autocompletion.path_name,
+            autocompletion=autocompletion.path_names,
         ),
     ],
     ignore_missing: t.Annotated[

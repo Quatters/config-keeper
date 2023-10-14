@@ -4,6 +4,7 @@ import importlib.metadata
 
 import typer
 
+from config_keeper.commands.common import autocompletion
 from config_keeper.commands.config import cli as config_cli
 from config_keeper.commands.paths import cli as paths_cli
 from config_keeper.commands.project import cli as project_cli
@@ -30,6 +31,9 @@ cli.add_typer(paths_cli, name='paths', help='Manage project paths.')
 ask_help = """
     Ask confirmation before operating.
 """
+projects_help = """
+    List of project names.
+"""
 
 @cli.callback(invoke_without_command=True)
 def print_version(
@@ -52,7 +56,13 @@ def print_version(
 
 @cli.command()
 def push(
-    projects: t.List[str],  # noqa: UP006
+    projects: t.Annotated[
+        t.List[str],  # noqa: UP006
+        typer.Argument(
+            help=projects_help,
+            autocompletion=autocompletion.projects,
+        ),
+    ],
     ask: t.Annotated[bool, typer.Option(help=ask_help)] = True,
 ):
     """
@@ -89,7 +99,13 @@ def push(
 
 @cli.command()
 def pull(
-    projects: t.List[str],  # noqa: UP006
+    projects: t.Annotated[
+        t.List[str],  # noqa: UP006
+        typer.Argument(
+            help=projects_help,
+            autocompletion=autocompletion.projects,
+        ),
+    ],
     ask: t.Annotated[bool, typer.Option(help=ask_help)] = True,
 ):
     """

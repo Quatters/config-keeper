@@ -59,21 +59,42 @@ def test_project():
     assert autocompletion.project('not found', ctx) == []
 
 
+def test_projects():
+    config.save(_test_conf)
+    ctx = get_context()
+
+    autocompletion.projects.__always_load__ = True
+    assert autocompletion.projects('', ctx) == [
+        'other name',
+        'test1',
+        'test2',
+    ]
+    assert autocompletion.projects('tes', ctx) == [
+        'test1',
+        'test2',
+    ]
+
+    ctx.params = {'projects': ['test1']}
+    assert autocompletion.projects('tes', ctx) == [
+        'test2',
+    ]
+
+
 def test_path_name():
     config.save(_test_conf)
     ctx = get_context()
-    autocompletion.path_name.__always_load__ = True
+    autocompletion.path_names.__always_load__ = True
 
     # no project provided
-    assert autocompletion.path_name('some', ctx) == []
+    assert autocompletion.path_names('some', ctx) == []
 
     # project test1
     ctx.params = {'project': 'test1'}
-    assert autocompletion.path_name('some', ctx) == ['somefile']
+    assert autocompletion.path_names('some', ctx) == ['somefile']
 
     # project test2
     ctx.params = {'project': 'test2'}
-    assert autocompletion.path_name('1', ctx) == ['1', '12']
+    assert autocompletion.path_names('1', ctx) == ['1', '12']
 
 
 def test_lazy_conf():

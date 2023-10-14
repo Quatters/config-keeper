@@ -303,7 +303,9 @@ $ config-keeper pull [OPTIONS] PROJECTS...
 
 **Arguments**:
 
-* `PROJECTS...`: [required]
+* `PROJECTS...`: 
+    List of project names.
+  [required]
 
 **Options**:
 
@@ -324,7 +326,9 @@ $ config-keeper push [OPTIONS] PROJECTS...
 
 **Arguments**:
 
-* `PROJECTS...`: [required]
+* `PROJECTS...`: 
+    List of project names.
+  [required]
 
 **Options**:
 
