@@ -47,7 +47,7 @@ def test_create():
     ], input='y\ny\n')
     assert result.exit_code == 0, result.stdout
     assert 'Checking' in result.stdout
-    assert 'Error:' in result.stdout
+    assert 'Error:' in result.stderr
     assert 'Do you want to continue? [y/N]:' in result.stdout
     assert 'Project "test1" already exists.' in result.stdout
     assert 'Would you like to overwrite it? [y/N]:' in result.stdout
@@ -109,14 +109,14 @@ def test_update():
     # non-existing project
     result = invoke(['project', 'update', 'some', '--repository=some'])
     assert result.exit_code == 203
-    assert result.stdout == 'Error: project "some" does not exist.\n'
+    assert result.stderr == 'Error: project "some" does not exist.\n'
 
     config.save(test_config)
 
     # update without args
     result = invoke(['project', 'update', 'test1'])
     assert result.exit_code == 204
-    assert result.stdout == 'Error: at least one option must be provided.\n'
+    assert result.stderr == 'Error: at least one option must be provided.\n'
 
     # valid update
     result = invoke(['project', 'update', 'test1', '--branch', 'new'])
@@ -139,7 +139,7 @@ def test_update():
     ], input='n\n')
     assert result.exit_code == 0
     assert result.stdout.startswith('Checking invalid...')
-    assert 'Error:' in result.stdout
+    assert 'Error:' in result.stderr
     assert result.stdout.endswith('Do you want to continue? [y/N]: n\n')
 
 
@@ -147,7 +147,7 @@ def test_delete():
     # check non-existing
     result = invoke(['project', 'delete', 'non-existing'])
     assert result.exit_code == 203
-    assert result.stdout == 'Error: project "non-existing" does not exist.\n'
+    assert result.stderr == 'Error: project "non-existing" does not exist.\n'
 
     config.save(test_config)
 
@@ -199,7 +199,7 @@ def test_show():
     # check non-existing project
     result = invoke(['project', 'show', 'non-existing'])
     assert result.exit_code == 203
-    assert result.stdout == 'Error: project "non-existing" does not exist.\n'
+    assert result.stderr == 'Error: project "non-existing" does not exist.\n'
 
     config.save(test_config)
 

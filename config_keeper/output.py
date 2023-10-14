@@ -28,6 +28,7 @@ class DefaultHighlighter(ReprHighlighter):
 
 
 console = Console(highlighter=DefaultHighlighter())
+errconsole = Console(highlighter=DefaultHighlighter(), stderr=True)
 
 
 def print_project_saved(project: str):

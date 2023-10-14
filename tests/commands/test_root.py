@@ -211,8 +211,8 @@ def test_error_on_push():
     assert (
         'Error: operation failed for following projects:\n\n'
         'test1\n'
-    ) in result.stdout
-    assert 'test3' in result.stdout
+    ) in result.stderr
+    assert 'test3' in result.stderr
 
     # check that test2 is successfully pushed
     run_cmd(['git', '-C', str(repo), 'checkout', 'my_branch'])
@@ -388,7 +388,7 @@ def test_pull_creates_file_if_it_not_exists():
     run_cmd(['git', '-C', str(repo), 'commit', '-m', 'some message'])
 
     result = invoke(['pull', 'test1', '--no-ask'])
-    assert result.exit_code == 0, result.stdout
+    assert result.exit_code == 0, result.stderr
 
     assert (dest / 'somefile').is_file()
     assert (dest / 'somedir').is_dir()
@@ -457,5 +457,5 @@ def test_push_with_invalid_config():
 
     result = invoke(['push', 'test1', '--no-ask'])
     assert result.exit_code == 201
-    assert 'Error: "projects.test1.paths.some_file"' in result.stdout
-    assert 'does not exist.\n' in result.stdout
+    assert 'Error: "projects.test1.paths.some_file"' in result.stderr
+    assert 'does not exist.\n' in result.stderr

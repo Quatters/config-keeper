@@ -31,7 +31,7 @@ def test_add():
         'paths', 'add', '--project', 'non-existing', 'some:some/path',
     ])
     assert result.exit_code == 203
-    assert result.stdout == 'Error: project "non-existing" does not exist.\n'
+    assert result.stderr == 'Error: project "non-existing" does not exist.\n'
 
     current_config = _test_config()
     config.save(current_config)
@@ -41,9 +41,9 @@ def test_add():
         'paths', 'add', '--project', 'test1', 'invalid_arg::',
     ])
     assert result.exit_code == 205
-    assert 'Error: invalid_arg:: is an invalid argument.' in result.stdout
-    assert 'Format must be as follows:' in result.stdout
-    assert 'path_name:/path/to/file/or/folder' in result.stdout
+    assert 'Error: invalid_arg:: is an invalid argument.' in result.stderr
+    assert 'Format must be as follows:' in result.stderr
+    assert 'path_name:/path/to/file/or/folder' in result.stderr
     assert config.load() == current_config
 
     some_file = create_file()
@@ -55,7 +55,7 @@ def test_add():
         f'some:{another_file}',
     ])
     assert result.exit_code == 207
-    assert result.stdout == (
+    assert result.stderr == (
         'Error: path name "some" is repeated multiple times.\n'
     )
     assert config.load() == current_config
@@ -66,8 +66,10 @@ def test_add():
         f'some:{another_file}',
     ])
     assert result.exit_code == 208
-    assert result.stdout == (
+    assert result.stderr == (
         'Error: path name "test_file" already in "test1".\n'
+    )
+    assert result.stdout == (
         'Tip: you can use --overwrite option.\n'
     )
     assert config.load() == current_config
@@ -92,7 +94,7 @@ def test_delete():
         'paths', 'add', '--project', 'non-existing', 'some:some/path',
     ])
     assert result.exit_code == 203
-    assert result.stdout == 'Error: project "non-existing" does not exist.\n'
+    assert result.stderr == 'Error: project "non-existing" does not exist.\n'
 
     current_config = _test_config()
     config.save(current_config)
@@ -102,8 +104,10 @@ def test_delete():
         'paths', 'delete', '--project', 'test1', 'test_dir', 'invalid',
     ])
     assert result.exit_code == 209
-    assert result.stdout == (
+    assert result.stderr == (
         'Error: project "test1" does not have path named "invalid".\n'
+    )
+    assert result.stdout == (
         'Tip: you can use --ignore-missing option to suppress these errors.\n'
     )
     assert config.load() == current_config
