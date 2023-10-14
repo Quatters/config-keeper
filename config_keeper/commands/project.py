@@ -175,6 +175,37 @@ def list_(
             console.print(project)
 
 
+@cli.command()
+def rename(
+    old_project: t.Annotated[
+        str,
+        typer.Argument(help=helps.project),
+    ],
+    new_project: t.Annotated[
+        str,
+        typer.Argument(help=helps.project),
+    ],
+):
+    """
+    Rename existing project.
+    """
+
+    if old_project == new_project:
+        msg = 'specify a different name.'
+        raise exc.InvalidArgumentError(msg)
+
+    conf = config.load()
+    check_if_project_exists(old_project, conf)
+
+    if new_project in conf['projects']:
+        raise exc.ProjectAlreadyExistsError(new_project)
+
+    conf['projects'][new_project] = conf['projects'].pop(old_project)
+    config.save(conf)
+
+    print_project_saved(new_project)
+
+
 def _check_remote(repository: str):
     msg = f'Checking {repository}...'
     console.print(msg)

@@ -244,3 +244,36 @@ def test_list():
         '  paths: {}\n'
         '  repository: another/repo\n\n'
     )
+
+
+def test_rename():
+    config.save(test_config)
+
+    # try to rename to the same name
+    result = invoke(['project', 'rename', 'test1', 'test1'])
+    assert result.exit_code == 206
+    assert result.stderr == 'Error: specify a different name.\n'
+
+    # try to rename non-existing project
+    result = invoke(['project', 'rename', 'non-existing', 'new_name'])
+    assert result.exit_code == 203
+    assert result.stderr == 'Error: project "non-existing" does not exist.\n'
+    assert config.load() == test_config
+
+    # try set new name as already existing one
+    result = invoke(['project', 'rename', 'test1', 'test2'])
+    assert result.exit_code == 202
+    assert result.stderr == 'Error: project "test2" already exists.\n'
+    assert config.load() == test_config
+
+    # valid rename
+    result = invoke(['project', 'rename', 'test1', 'new_name'])
+    assert result.exit_code == 0
+    assert result.stdout == 'Project "new_name" saved.\n'
+    updated_config = {
+        'projects': {
+            'test2': test_config['projects']['test2'],
+            'new_name': test_config['projects']['test1'],
+        },
+    }
+    assert config.load() == updated_config

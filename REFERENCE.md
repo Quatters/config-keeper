@@ -159,6 +159,7 @@ $ config-keeper project [OPTIONS] COMMAND [ARGS]...
 * `create`: Create a new project.
 * `delete`: Delete project.
 * `list`: List all projects.
+* `rename`: Rename existing project.
 * `show`: Show project config.
 * `update`: Update project.
 
@@ -219,6 +220,29 @@ $ config-keeper project list [OPTIONS]
 **Options**:
 
 * `-v, --verbose`: Show additional information.
+* `--help`: Show this message and exit.
+
+### `config-keeper project rename`
+
+Rename existing project.
+
+**Usage**:
+
+```console
+$ config-keeper project rename [OPTIONS] OLD_PROJECT NEW_PROJECT
+```
+
+**Arguments**:
+
+* `OLD_PROJECT`: 
+    The name of project.
+  [required]
+* `NEW_PROJECT`: 
+    The name of project.
+  [required]
+
+**Options**:
+
 * `--help`: Show this message and exit.
 
 ### `config-keeper project show`
