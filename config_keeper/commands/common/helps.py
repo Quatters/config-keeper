@@ -9,5 +9,5 @@ branch = """
     Branch of the repository used to push and pull from.
 """
 check = """
-    Whether check if repository exist.
+    Whether to check if repository exist.
 """
