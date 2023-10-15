@@ -183,7 +183,7 @@ $ config-keeper project create [OPTIONS] PROJECT
 
 * `--repository TEXT`: Repository which is used to store your files and directories.  [required]
 * `--branch TEXT`: Branch of the repository used to push and pull from.  [default: main]
-* `--check / --no-check`: Whether check if repository exist.  [default: check]
+* `--check / --no-check`: Whether to check if repository exist.  [default: check]
 * `--help`: Show this message and exit.
 
 ### `config-keeper project delete`
@@ -285,7 +285,7 @@ $ config-keeper project update [OPTIONS] PROJECT
 
 * `--repository TEXT`: Repository which is used to store your files and directories.
 * `--branch TEXT`: Branch of the repository used to push and pull from.
-* `--check / --no-check`: Whether check if repository exist.  [default: check]
+* `--check / --no-check`: Whether to check if repository exist.  [default: check]
 * `--help`: Show this message and exit.
 
 ## `config-keeper pull`
@@ -303,11 +303,15 @@ $ config-keeper pull [OPTIONS] PROJECTS...
 
 **Arguments**:
 
-* `PROJECTS...`: [required]
+* `PROJECTS...`: 
+    List of project names.
+  [required]
 
 **Options**:
 
 * `--ask / --no-ask`: Ask confirmation before operating.  [default: ask]
+* `--ref TEXT`: Commit sha or branch name to operate with. Only available if specified
+exactly one project. If not given than project branch is used.
 * `--help`: Show this message and exit.
 
 ## `config-keeper push`
@@ -324,9 +328,13 @@ $ config-keeper push [OPTIONS] PROJECTS...
 
 **Arguments**:
 
-* `PROJECTS...`: [required]
+* `PROJECTS...`: 
+    List of project names.
+  [required]
 
 **Options**:
 
 * `--ask / --no-ask`: Ask confirmation before operating.  [default: ask]
+* `--ref TEXT`: Commit sha or branch name to operate with. Only available if specified
+exactly one project. If not given than project branch is used.
 * `--help`: Show this message and exit.
