@@ -7,7 +7,7 @@ from pathlib import Path
 
 from config_keeper import config
 from config_keeper import exceptions as exc
-from config_keeper.console_helpers import (
+from config_keeper.output import (
     print_critical,
     print_error,
     print_warning,

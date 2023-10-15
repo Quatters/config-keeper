@@ -7,7 +7,7 @@ import typer
 from config_keeper import config
 from config_keeper import exceptions as exc
 from config_keeper.commands.common import autocompletion, helps
-from config_keeper.console_helpers import print_project_saved
+from config_keeper.output import print_project_saved
 from config_keeper.validation import check_if_project_exists
 
 cli = typer.Typer()
@@ -96,7 +96,7 @@ def delete(
         t.List[str],   # noqa: UP006
         typer.Argument(
             help=path_names_help,
-            autocompletion=autocompletion.path_name,
+            autocompletion=autocompletion.path_names,
         ),
     ],
     ignore_missing: t.Annotated[

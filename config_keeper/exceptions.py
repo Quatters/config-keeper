@@ -1,7 +1,7 @@
 import typer
 
 from config_keeper import settings
-from config_keeper.console_helpers import print_error, print_tip
+from config_keeper.output import print_error, print_tip
 
 
 class ConfigKeeperError(Exception):
@@ -35,6 +35,17 @@ class ProjectDoesNotExistError(PublicError):
         )
 
 
+class ProjectAlreadyExistsError(PublicError):
+    exit_code = 202
+    message = 'project "{project}" already exists.'
+
+    def __init__(self, project: str, *, tip: str | None = None):
+        super().__init__(
+            self.message.format(project=project),
+            tip=tip,
+        )
+
+
 class AtLeastOneOptionMustBeProvidedError(PublicError):
     exit_code = 204
 
@@ -44,6 +55,10 @@ class AtLeastOneOptionMustBeProvidedError(PublicError):
 
 class InvalidArgumentFormatError(PublicError):
     exit_code = 205
+
+
+class InvalidArgumentError(PublicError):
+    exit_code = 206
 
 
 class DuplicatePathNameError(PublicError):

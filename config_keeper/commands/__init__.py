@@ -1,20 +1,14 @@
-import subprocess  # noqa: I001
+import importlib.metadata  # noqa: I001
 import typing as t
-import importlib.metadata
 
 import typer
 
+from config_keeper.commands.common import autocompletion, sync
 from config_keeper.commands.config import cli as config_cli
 from config_keeper.commands.paths import cli as paths_cli
 from config_keeper.commands.project import cli as project_cli
-from config_keeper import config, console, settings
-from config_keeper import exceptions as exc
-from config_keeper.sync_handler import SyncHandler
-from config_keeper.validation import ProjectValidator, check_if_project_exists
-from config_keeper.progress import spinner
-
-if t.TYPE_CHECKING:
-    from rich.progress import TaskID
+from config_keeper import config, settings
+from config_keeper.output import console
 
 cli = typer.Typer(
     name=settings.EXECUTABLE_NAME,
@@ -29,6 +23,14 @@ cli.add_typer(paths_cli, name='paths', help='Manage project paths.')
 ask_help = """
     Ask confirmation before operating.
 """
+projects_help = """
+    List of project names.
+"""
+ref_help = """
+    Commit sha or branch name to operate with. Only available if specified
+    exactly one project. If not given than project branch is used.
+"""
+
 
 @cli.callback(invoke_without_command=True)
 def print_version(
@@ -51,8 +53,18 @@ def print_version(
 
 @cli.command()
 def push(
-    projects: t.List[str],  # noqa: UP006
+    projects: t.Annotated[
+        t.List[str],  # noqa: UP006
+        typer.Argument(
+            help=projects_help,
+            autocompletion=autocompletion.projects,
+        ),
+    ],
     ask: t.Annotated[bool, typer.Option(help=ask_help)] = True,
+    ref: t.Annotated[
+        t.Optional[str],  # noqa: UP007
+        typer.Option(help=ref_help),
+    ] = None,
 ):
     """
     Push files or directories of projects to their repositories. This operation
@@ -60,36 +72,32 @@ def push(
     other projects to be processed).
     """
 
+    sync.check_options(projects, ask, ref)
     conf = config.load()
-    validator = ProjectValidator(
-        conf,
-        path_existence='error',
-        not_copyable_path='error',
-        not_writeable_path='skip',
-    )
+    validator = sync.get_validator('push', conf)
+    sync.validate_projects(projects, validator)
 
-    _validate_projects(projects, validator)
+    if ref:
+        conf['projects'][projects[0]]['branch'] = ref
 
-    if ask:
-        console.print('Going to push into following branches:')
-
-        for project in projects:
-            console.print(
-                f'- "{conf["projects"][project]["branch"]}" at '
-                f'{conf["projects"][project]["repository"]} '
-                f'(from "{project}")',
-            )
-
-        if not typer.confirm('Proceed?', default=True):
-            raise typer.Exit
-
-    _operate('push', projects, conf)
+    sync.handle_push_ask(projects, conf, ask=ask)
+    sync.operate('push', projects, conf)
 
 
 @cli.command()
 def pull(
-    projects: t.List[str],  # noqa: UP006
+    projects: t.Annotated[
+        t.List[str],  # noqa: UP006
+        typer.Argument(
+            help=projects_help,
+            autocompletion=autocompletion.projects,
+        ),
+    ],
     ask: t.Annotated[bool, typer.Option(help=ask_help)] = True,
+    ref: t.Annotated[
+        t.Optional[str],  # noqa: UP007
+        typer.Option(help=ref_help),
+    ] = None,
 ):
     """
     Pull all files and directories of projects from their repositories and move
@@ -98,75 +106,13 @@ def pull(
     prevent other projects to be processed).
     """
 
+    sync.check_options(projects, ask, ref)
     conf = config.load()
-    validator = ProjectValidator(
-        conf,
-        path_existence='skip',
-        not_copyable_path='skip',
-        not_writeable_path='error',
-    )
+    validator = sync.get_validator('pull', conf)
+    sync.validate_projects(projects, validator)
 
-    _validate_projects(projects, validator)
+    if ref:
+        conf['projects'][projects[0]]['branch'] = ref
 
-    if ask:
-        console.print('Following paths will most likely be replaced:')
-
-        for project in projects:
-            for path in conf['projects'][project]['paths'].values():
-                console.print(f'- {path} (from "{project}")')
-
-        if not typer.confirm('Proceed?', default=True):
-            raise typer.Exit
-
-    _operate('pull', projects, conf)
-
-
-def _validate_projects(
-    projects: list[str],
-    validator: ProjectValidator,
-):
-    for project in projects:
-        check_if_project_exists(project, validator.conf)
-
-    with spinner() as s:
-        prev_task: TaskID | None = None
-        for project in projects:
-            if prev_task is not None:
-                s.stop_task(prev_task)
-            prev_task = s.add_task(
-                f'Validating project "{project}"...',
-                total=None,
-            )
-            validator.validate(project)
-
-    validator.print_errors()
-    if not validator.is_valid:
-        raise exc.InvalidConfigError
-
-
-def _operate(
-    operation: t.Literal['push', 'pull'],
-    projects: list[str],
-    conf: config.TConfig,
-):
-    errors: dict[str, str] = {}
-
-    with spinner() as s:
-        prev_task: TaskID | None = None
-        for project in projects:
-            if prev_task is not None:
-                s.stop_task(prev_task)
-            prev_task = s.add_task(
-                f'Processing project "{project}"...',
-                total=None,
-            )
-            handler = SyncHandler(project, conf)
-            try:
-                getattr(handler, operation)()
-            except subprocess.CalledProcessError as e:
-                errors[project] = e.stdout + e.stderr
-
-    if errors:
-        raise exc.SyncError(errors)
-
-    console.print('Operation successfully completed.')
+    sync.handle_pull_ask(projects, conf, ask=ask)
+    sync.operate('pull', projects, conf)

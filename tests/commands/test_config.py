@@ -53,8 +53,8 @@ def test_validate():
 
     result = invoke(['config', 'validate'])
     assert result.exit_code == 201
-    assert result.stdout == (
-        '\nWarning: unknown parameter "invalid_root_key".\n'
+    assert result.stderr == (
+        'Warning: unknown parameter "invalid_root_key".\n'
         'Warning: unknown parameter "projects.test1.invalid_project_key".\n'
         'Critical: "projects.test1.paths.invalid_path_type" ({}) is not a '
         'string.\n'
@@ -82,7 +82,7 @@ def test_validate():
 
     result = invoke(['config', 'validate'])
     assert result.exit_code == 201
-    assert result.stdout == (
+    assert result.stderr == (
         'Critical: "projects" is not a map.\n'
     )
 
@@ -130,44 +130,44 @@ def test_validate_files_permissions():
 
     result = invoke(['config', 'validate'])
     assert result.exit_code == 201
-    formatted_stdout = result.stdout.replace('\n', ' ').replace('  ', ' ')
+    formatted_stderr = result.stderr.replace('\n', ' ').replace('  ', ' ')
 
     # parse paths because if they are too long then in random place
     # \n char may appear
     # e.g. /long/path -> /long/p\nath
-    replaced_stdout = re.sub(
+    replaced_stderr = re.sub(
         r'(\/[\w \/]+) has',
         '<path> has',
-        formatted_stdout,
+        formatted_stderr,
     )
 
     assert (
         'Error: "projects.test1.paths.file_without_read_perm" is not '
         'copyable because <path> has no read '
         'permission.'
-    ) in replaced_stdout
+    ) in replaced_stderr
     assert (
         'Error: "projects.test1.paths.file_in_dir" is not accessible '
         'because <path> has no execute permission.'
-    ) in replaced_stdout
+    ) in replaced_stderr
     assert (
         'Error: "projects.test1.paths.dir_without_exec_perm" is not '
         'copyable because <path> has no '
         'execute permission.'
-    ) in replaced_stdout
+    ) in replaced_stderr
     assert (
         'Error: "projects.test1.paths.file_without_write_perm" is not '
         'writeable because <path> has no write permission.'
-    ) in replaced_stdout
+    ) in replaced_stderr
     assert (
         'Error: "projects.test1.paths.dir_without_write_perm" is not writeable '
         'because <path> has no write permission.'
-    ) in replaced_stdout
+    ) in replaced_stderr
 
     # check paths separately
     path_strings = {
         s.replace(' has', '').replace(' ', '')
-        for s in re.findall(r'(\/[\w \/]+) has', formatted_stdout)
+        for s in re.findall(r'(\/[\w \/]+) has', formatted_stderr)
     }
     assert str(file_without_read_perm) in path_strings
     assert str(file_in_dir.parent) in path_strings
@@ -181,19 +181,21 @@ def test_config_is_not_a_valid_yaml():
 
     result = invoke(['config', 'validate'])
     assert result.exit_code == 201
-    assert 'Error:' in result.stdout
-    assert 'is not a valid YAML file' in result.stdout
-    assert 'Please fix or remove it.' in result.stdout
+    assert 'Error:' in result.stderr
+    assert 'is not a valid YAML file' in result.stderr
+    assert 'Please fix or remove it.' in result.stderr
     assert 'Tip: you can use' in result.stdout
     assert f'> {settings.EXECUTABLE_NAME} config validate\n' in result.stdout
     assert 'after.' in result.stdout
     assert re.match((
-        rf'^Error: [\n\w\/\-]+\.yaml is not a valid YAML file\.\n'
-        r'Please fix or remove it\.\n'
+        r'^Error: [\n\w\/\-]+\.yaml is not a valid YAML file\.\n'
+        r'Please fix or remove it\.\n$'
+    ), result.stderr)
+    assert result.stdout == (
         'Tip: you can use\n'
         f'> {settings.EXECUTABLE_NAME} config validate\n'
-        r'after\.\n$'
-    ), result.stdout)
+        'after.\n'
+    )
 
 
 def test_config_root_is_not_a_map():
@@ -201,10 +203,10 @@ def test_config_root_is_not_a_map():
 
     result = invoke(['config', 'validate'])
     assert result.exit_code == 201
-    assert 'Error: the root object of' in result.stdout
-    assert 'config must be a' in result.stdout
-    assert 'map.' in result.stdout
-    assert 'Please fix or remove config.' in result.stdout
+    assert 'Error: the root object of' in result.stderr
+    assert 'config must be a' in result.stderr
+    assert 'map.' in result.stderr
+    assert 'Please fix or remove config.' in result.stderr
     assert 'Tip: you can use' in result.stdout
     assert f'> {settings.EXECUTABLE_NAME} config validate' in result.stdout
     assert 'after.' in result.stdout
@@ -215,7 +217,7 @@ def test_config_projects_is_not_a_map():
 
     result = invoke(['config', 'validate'])
     assert result.exit_code == 201
-    assert 'Critical: "projects" is not a map.' in result.stdout
+    assert 'Critical: "projects" is not a map.' in result.stderr
 
 
 def test_empty_config_is_valid():
@@ -233,11 +235,11 @@ def test_oserror_for_config_file():
 
     result = invoke(['config', 'validate'])
     assert result.exit_code == 255
-    assert 'Permission denied' in result.stdout
+    assert 'Permission denied' in result.stderr
 
     somedir = create_dir()
     somedir.chmod(0o000)
     settings.CONFIG_FILE = somedir / 'somefile'
     result = invoke(['config', 'validate'])
     assert result.exit_code == 255
-    assert 'Permission denied' in result.stdout
+    assert 'Permission denied' in result.stderr

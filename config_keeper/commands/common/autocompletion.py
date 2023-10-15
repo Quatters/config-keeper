@@ -48,7 +48,17 @@ def project(incomplete: str, ctx: Context) -> TCompleteFuncReturn:
 
 
 @_lazy_config
-def path_name(incomplete: str, ctx: Context) -> TCompleteFuncReturn:
+def projects(incomplete: str, ctx: Context) -> TCompleteFuncReturn:
+    completions: list[str] = []
+    used_projects = ctx.params.get('projects') or ()
+    for project in ctx.conf['projects']:
+        if project not in used_projects and project.startswith(incomplete):
+            completions.append(project)
+    return completions
+
+
+@_lazy_config
+def path_names(incomplete: str, ctx: Context) -> TCompleteFuncReturn:
     project = ctx.params.get('project')
     if project:
         paths = ctx.conf['projects'].get(project, {}).get('paths')

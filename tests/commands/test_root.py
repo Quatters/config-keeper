@@ -211,8 +211,8 @@ def test_error_on_push():
     assert (
         'Error: operation failed for following projects:\n\n'
         'test1\n'
-    ) in result.stdout
-    assert 'test3' in result.stdout
+    ) in result.stderr
+    assert 'test3' in result.stderr
 
     # check that test2 is successfully pushed
     run_cmd(['git', '-C', str(repo), 'checkout', 'my_branch'])
@@ -263,21 +263,103 @@ def test_push_with_ask():
     assert (repo / 'some_file').read_text() == 'some file content'
 
 
+def test_sync_with_ref():
+    repo = create_repo()
+    some_file = create_file(name='some_file', content='some file content')
+
+    conf = {
+        'projects': {
+            'test1': {
+                'branch': 'non-existing-branch',
+                'repository': str(repo),
+                'paths': {
+                    'some_file': str(some_file),
+                },
+            },
+        },
+    }
+    config.save(conf)
+
+    result = invoke(['push', 'test1', '--no-ask', '--ref', 'my_branch'])
+    assert result.exit_code == 0
+    assert 'Operation successfully completed.' in result.stdout
+
+    # check that my_branch has pushed file
+    run_cmd(['git', '-C', str(repo), 'checkout', 'my_branch'])
+    assert (repo / 'some_file').is_file()
+    assert (repo / 'some_file').read_text() == 'some file content'
+
+    with pytest.raises(
+        subprocess.CalledProcessError,
+        match=r'^Command .+ returned non-zero exit status 1\.$',
+    ):
+        run_cmd(['git', '-C', str(repo), 'checkout', 'non-existing-branch'])
+
+    # checkout another branch to not fail on next pushes
+    run_cmd(['git', '-C', str(repo), 'checkout', '-b', 'empty'])
+
+    # get commit sha
+    result = run_cmd(['git', '-C', str(repo), 'log', '--pretty=format:%H'])
+    first_commit_sha = result.stdout
+    assert isinstance(first_commit_sha, str)
+
+    # push another file
+    another_file = create_file(name='another_file')
+    conf['projects']['test1']['paths']['another_file'] = str(another_file)
+    config.save(conf)
+
+    result = invoke(['push', 'test1', '--no-ask', '--ref', 'my_branch'])
+    assert result.exit_code == 0, result.stderr
+    assert 'Operation successfully completed.' in result.stdout
+
+    # delete files
+    some_file.unlink()
+    another_file.unlink()
+
+    # pull specifying branch
+    result = invoke(['pull', 'test1', '--no-ask', '--ref', 'my_branch'])
+    assert result.exit_code == 0, result.stderr
+    assert 'Operation successfully completed.' in result.stdout
+    assert some_file.is_file()
+    assert some_file.read_text() == 'some file content'
+    assert another_file.is_file()
+
+    # delete files again
+    some_file.unlink()
+    another_file.unlink()
+
+    # pull specifying commit sha
+    result = invoke(['pull', 'test1', '--no-ask', '--ref', first_commit_sha])
+    assert result.exit_code == 0, result.stderr
+    assert 'Operation successfully completed.' in result.stdout
+    assert some_file.is_file()
+    assert some_file.read_text() == 'some file content'
+    assert not another_file.is_file()
+
+
 @freeze_time('2000-01-01 00:00:00')
 def test_commit_message():
-    handler = SyncHandler('my_project', {
+    repo = create_repo()
+    some_file = create_file(name='some_file', content='some file content')
+
+    config.save({
         'projects': {
-            'my_project': {
-                'branch': 'main',
-                'paths': {},
-                'repository': 'some/repo',
+            'test1': {
+                'branch': 'my_branch',
+                'repository': str(repo),
+                'paths': {
+                    'some_file': str(some_file),
+                },
             },
         },
     })
 
-    assert handler._get_commit_message() == (
-        'Auto push from 2000-01-01 00:00 [my_project]'
-    )
+    result = invoke(['push', 'test1', '--no-ask'])
+    assert result.exit_code == 0
+
+    run_cmd(['git', '-C', str(repo), 'checkout', 'my_branch'])
+    result = run_cmd(['git', '-C', str(repo), 'log', '--pretty=format:%s'])
+    assert result.stdout == 'Auto push from 2000-01-01 00:00 [test1]'
 
 
 def test_executable_not_found():
@@ -388,7 +470,7 @@ def test_pull_creates_file_if_it_not_exists():
     run_cmd(['git', '-C', str(repo), 'commit', '-m', 'some message'])
 
     result = invoke(['pull', 'test1', '--no-ask'])
-    assert result.exit_code == 0, result.stdout
+    assert result.exit_code == 0, result.stderr
 
     assert (dest / 'somefile').is_file()
     assert (dest / 'somedir').is_dir()
@@ -457,5 +539,34 @@ def test_push_with_invalid_config():
 
     result = invoke(['push', 'test1', '--no-ask'])
     assert result.exit_code == 201
-    assert 'Error: "projects.test1.paths.some_file"' in result.stdout
-    assert 'does not exist.\n' in result.stdout
+    assert 'Error: "projects.test1.paths.some_file"' in result.stderr
+    assert 'does not exist.\n' in result.stderr
+
+
+def test_cannot_use_ref_with_multiple_projects():
+    config.save({
+        'projects': {
+            'test1': {
+                'branch': 'some',
+                'repository': 'some',
+                'paths': {},
+            },
+            'test2': {
+                'branch': 'some',
+                'repository': 'some',
+                'paths': {},
+            },
+        },
+    })
+
+    result = invoke(['push', 'test1', 'test2', '--ref', 'someref'])
+    assert result.exit_code == 206
+    assert result.stderr == (
+        'Error: --ref option cannot be used with multiple projects.\n'
+    )
+
+    result = invoke(['pull', 'test1', 'test2', '--ref', 'someref'])
+    assert result.exit_code == 206
+    assert result.stderr == (
+        'Error: --ref option cannot be used with multiple projects.\n'
+    )
