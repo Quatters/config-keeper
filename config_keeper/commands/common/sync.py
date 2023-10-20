@@ -5,7 +5,7 @@ import typer
 
 from config_keeper import config
 from config_keeper import exceptions as exc
-from config_keeper.output import console
+from config_keeper.output import console, format_panel_columns
 from config_keeper.progress import spinner
 from config_keeper.sync_handler import SyncHandler
 from config_keeper.validation import ProjectValidator, check_if_project_exists
@@ -103,8 +103,10 @@ def operate(
     operation: TOperation,
     projects: list[str],
     conf: config.TConfig,
+    verbose: bool = False,
 ):
-    errors: dict[str, str] = {}
+    output: dict[str, str] = {}
+    projects_with_errors: list[str] = []
 
     with spinner() as s:
         prev_task: TaskID | None = None
@@ -115,13 +117,26 @@ def operate(
                 f'Processing project "{project}"...',
                 total=None,
             )
-            handler = SyncHandler(project, conf)
+            handler = SyncHandler(project, conf, verbose_output=verbose)
             try:
                 getattr(handler, operation)()
+                output[f'[green]{project}[/green]'] = handler.get_output(
+                    verbose,
+                )
             except subprocess.CalledProcessError as e:
-                errors[project] = e.stdout + e.stderr
+                projects_with_errors.append(project)
+                output[f'[red]{project}[/red]'] = (
+                    f'{handler.get_output(verbose)}\n'
+                    '[red]'
+                    f'{(e.stdout + e.stderr).strip()}'
+                    '[/red]'
+                ).strip()
 
-    if errors:
-        raise exc.SyncError(errors)
+    console.print(format_panel_columns(output))
 
-    console.print('Operation successfully completed.')
+    if projects_with_errors:
+        projects_msg = ', '.join(f'"{p}"' for p in projects_with_errors)
+        msg = f'operation did not succeeded for {projects_msg}.'
+        raise exc.SyncError(msg)
+
+    console.print('Operation [green]successfully[/green] completed.')

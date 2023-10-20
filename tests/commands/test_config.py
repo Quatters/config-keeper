@@ -1,5 +1,4 @@
 import re
-from uuid import uuid1
 
 from config_keeper import config, settings
 
@@ -19,7 +18,7 @@ def test_validate():
     assert result.exit_code == 0
     assert result.stdout == '\nOK\n'
 
-    invalid_path = str(uuid1()).replace('-', '/')
+    invalid_path = './invalid/path'
     test_config = {
         'invalid_root_key': {},
         'projects': {
@@ -58,7 +57,7 @@ def test_validate():
         'Warning: unknown parameter "projects.test1.invalid_project_key".\n'
         'Critical: "projects.test1.paths.invalid_path_type" ({}) is not a '
         'string.\n'
-        f'Warning: "projects.test1.paths.some_path" ({invalid_path}) does not\n'
+        f'Warning: "projects.test1.paths.some_path" ({invalid_path}) does not '
         'exist.\n'
         'Error: "projects.test1.repository" (invalid/repo) is unavailable.\n'
         'Error: "projects.test1" missing parameter "branch".\n'
@@ -204,8 +203,7 @@ def test_config_root_is_not_a_map():
     result = invoke(['config', 'validate'])
     assert result.exit_code == 201
     assert 'Error: the root object of' in result.stderr
-    assert 'config must be a' in result.stderr
-    assert 'map.' in result.stderr
+    assert 'must be a map.' in result.stderr
     assert 'Please fix or remove config.' in result.stderr
     assert 'Tip: you can use' in result.stdout
     assert f'> {settings.EXECUTABLE_NAME} config validate' in result.stdout

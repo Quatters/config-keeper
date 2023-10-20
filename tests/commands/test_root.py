@@ -195,11 +195,19 @@ def test_error_on_push():
         },
     })
 
-    def trouble_maker(self: SyncHandler, project: str, conf: config.TConfig):
+    def trouble_maker(
+        self: SyncHandler,
+        project: str,
+        conf: config.TConfig,
+        *,
+        verbose_output: bool = False,
+    ):
         if project in ('test1', 'test3'):
             conf['projects'][project]['repository'] = 'invalid/repo'
         self.project = project
         self.conf = conf
+        self._output = ''
+        self.verbose_output = verbose_output
 
     with mock.patch(
         'config_keeper.sync_handler.SyncHandler.__init__',
@@ -209,8 +217,7 @@ def test_error_on_push():
         result = invoke(['push', 'test1', 'test2', 'test3', '--no-ask'])
     assert result.exit_code == 220
     assert (
-        'Error: operation failed for following projects:\n\n'
-        'test1\n'
+        'Error: operation did not succeeded for "test1", "test3".\n'
     ) in result.stderr
     assert 'test3' in result.stderr
 
@@ -331,6 +338,9 @@ def test_sync_with_ref():
     # pull specifying commit sha
     result = invoke(['pull', 'test1', '--no-ask', '--ref', first_commit_sha])
     assert result.exit_code == 0, result.stderr
+    assert 'Skipped ' in result.stdout
+    assert 'because repository does not' in result.stdout
+    assert 'contain ./another_file' in result.stdout
     assert 'Operation successfully completed.' in result.stdout
     assert some_file.is_file()
     assert some_file.read_text() == 'some file content'
@@ -520,6 +530,40 @@ def test_pull_with_ask():
     result = invoke(['pull', 'test1', '--ask'], input='n\n')
     assert result.exit_code == 0
     assert (source_dir / 'some_file').read_text() == 'some_content'
+
+
+def test_sync_with_verbose():
+    repo = create_repo()
+    some_file = create_file(name='some_file')
+
+    config.save({
+        'projects': {
+            'test1': {
+                'repository': str(repo),
+                'branch': 'my_branch',
+                'paths': {
+                    'some_file': str(some_file),
+                },
+            },
+        },
+    })
+
+    result = invoke(['push', 'test1', '--no-ask', '-v'])
+    assert result.exit_code == 0
+    assert '1 file changed, 0 insertions(+), 0 deletions(-)' in result.stdout
+    assert 'Fetched /' in result.stdout
+    assert 'Deleted /' in result.stdout
+    assert (
+        "branch 'my_branch' set up to track 'origin/my_branch'"
+    ) in result.stdout
+    assert 'Committed as "Auto push from' in result.stdout
+    assert '[test1]"' in result.stdout
+
+    result = invoke(['pull', 'test1', '--no-ask', '--verbose'])
+    assert result.exit_code == 0
+    assert 'my_branch  -> FETCH_HEAD' in result.stdout
+    assert 'Put /' in result.stdout
+    assert 'Deleted /' in result.stdout
 
 
 def test_push_with_invalid_config():

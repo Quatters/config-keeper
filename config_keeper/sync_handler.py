@@ -4,6 +4,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from rich.markup import escape
+
 from config_keeper import config
 from config_keeper import exceptions as exc
 
@@ -51,9 +53,17 @@ def remote_branch_exists(
 
 
 class SyncHandler:
-    def __init__(self, project: str, conf: config.TConfig):
+    def __init__(
+        self,
+        project: str,
+        conf: config.TConfig,
+        *,
+        verbose_output: bool = False,
+    ):
         self.project = project
         self.conf = conf
+        self.verbose_output = verbose_output
+        self._output: str = ''
 
     def push(self):
         branch = self.conf['projects'][self.project]['branch']
@@ -61,40 +71,48 @@ class SyncHandler:
 
         temp_dir = tempfile.mkdtemp()
 
-        run_cmd(['git', 'init', temp_dir])
-        run_cmd(['git', '-C', temp_dir, 'remote', 'add', 'origin', repository])
+        self._run_cmd(['git', 'init', temp_dir])
+        self._run_cmd([
+            'git', '-C', temp_dir, 'remote', 'add', 'origin', repository,
+        ])
 
         if remote_branch_exists(temp_dir, branch):
-            run_cmd(['git', '-C', temp_dir, 'fetch', 'origin'])
-            run_cmd(['git', '-C', temp_dir, 'checkout', branch])
+            self._run_cmd(['git', '-C', temp_dir, 'fetch', 'origin'])
+            self._run_cmd(['git', '-C', temp_dir, 'checkout', branch])
             clear_working_tree(temp_dir)
         else:
-            run_cmd(['git', '-C', temp_dir, 'checkout', '-b', branch])
+            self._run_cmd(['git', '-C', temp_dir, 'checkout', '-b', branch])
 
         self._fetch_files(temp_dir)
 
-        run_cmd(['git', '-C', temp_dir, 'add', '.'])
-        run_cmd([
-            'git', '-C', temp_dir, 'commit', '-m', self._get_commit_message(),
+        self._run_cmd(['git', '-C', temp_dir, 'add', '.'])
+
+        commit_msg = self._get_commit_message()
+        self._run_cmd([
+            'git', '-C', temp_dir, 'commit', '-m', commit_msg,
         ])
-        run_cmd([
+        self._run_cmd([
             'git', '-C', temp_dir, 'push', '--set-upstream', 'origin', branch,
         ])
 
-        delete_dir(temp_dir)
+        self._delete_dir(temp_dir)
+        self._write_output(f'Committed as "{escape(commit_msg)}"')
 
     def pull(self):
         pull_dir = tempfile.mkdtemp()
         branch = self.conf['projects'][self.project]['branch']
         repository = self.conf['projects'][self.project]['repository']
 
-        run_cmd(['git', 'init', pull_dir])
-        run_cmd([
+        self._run_cmd(['git', 'init', pull_dir])
+        self._run_cmd([
             'git', '-C', pull_dir, 'pull', repository, branch,
         ])
 
         self._put_in_places(pull_dir)
-        delete_dir(pull_dir)
+        self._delete_dir(pull_dir)
+
+    def get_output(self, verbose: bool = False) -> str:
+        return self._output.strip()
 
     def _fetch_files(self, directory: Path | str):
         directory = Path(directory)
@@ -108,6 +126,7 @@ class SyncHandler:
                 shutil.copy2(*copy_args)
             else:
                 shutil.copytree(*copy_args)
+            self._write_output(f'Fetched {path}')
 
     def _put_in_places(self, directory: Path | str):
         directory = Path(directory)
@@ -128,7 +147,26 @@ class SyncHandler:
                     shutil.copy2(*copy_args)
                 else:
                     shutil.copytree(*copy_args)
+                self._write_output(f'Put {dest}')
+            else:
+                self._write_output(
+                    f'Skipped {str_path} because repository does not contain '
+                    f'[magenta].[/magenta]/{path_name}',
+                )
 
     def _get_commit_message(self) -> str:
         now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
         return f'Auto push from {now} [{self.project}]'
+
+    def _run_cmd(self, cmd: list[str]) -> subprocess.CompletedProcess[str]:
+        result = run_cmd(cmd)
+        self._write_output(result.stdout + result.stderr, verbose=True)
+        return result
+
+    def _delete_dir(self, directory: str | Path):
+        delete_dir(directory)
+        self._write_output(f'Deleted {directory}', verbose=True)
+
+    def _write_output(self, msg: str, *, verbose: bool = False):
+        if not verbose or self.verbose_output:
+            self._output += f'{msg.strip()}\n'
