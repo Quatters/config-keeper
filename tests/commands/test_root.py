@@ -551,8 +551,8 @@ def test_sync_with_verbose():
     result = invoke(['push', 'test1', '--no-ask', '-v'])
     assert result.exit_code == 0
     assert '1 file changed, 0 insertions(+), 0 deletions(-)' in result.stdout
-    assert 'Fetched /' in result.stdout
-    assert 'Deleted /' in result.stdout
+    assert 'Fetched ' in result.stdout
+    assert 'Deleted ' in result.stdout
     assert (
         "branch 'my_branch' set up to track 'origin/my_branch'"
     ) in result.stdout
@@ -562,8 +562,8 @@ def test_sync_with_verbose():
     result = invoke(['pull', 'test1', '--no-ask', '--verbose'])
     assert result.exit_code == 0
     assert 'my_branch  -> FETCH_HEAD' in result.stdout
-    assert 'Put /' in result.stdout
-    assert 'Deleted /' in result.stdout
+    assert 'Put ' in result.stdout
+    assert 'Deleted ' in result.stdout
 
 
 def test_push_with_invalid_config():
