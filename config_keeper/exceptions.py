@@ -94,15 +94,6 @@ class PathNameDoesNotExistError(PublicError):
 class SyncError(PublicError):
     exit_code = 220
 
-    def __init__(self, errors_map: dict[str, str]):
-        msg = 'operation failed for following projects:\n\n'
-
-        for project, error in errors_map.items():
-            msg += f'{project}\n'
-            msg += '    ' + error.replace('\n', '\n    ') + '\n'
-
-        super().__init__(msg)
-
 
 class ExecutableNotFoundError(PublicError):
     exit_code = 254

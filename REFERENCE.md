@@ -312,6 +312,7 @@ $ config-keeper pull [OPTIONS] PROJECTS...
 * `--ask / --no-ask`: Ask confirmation before operating.  [default: ask]
 * `--ref TEXT`: Commit sha or branch name to operate with. Only available if specified
 exactly one project. If not given than project branch is used.
+* `-v, --verbose`: Show additional information.
 * `--help`: Show this message and exit.
 
 ## `config-keeper push`
@@ -337,4 +338,5 @@ $ config-keeper push [OPTIONS] PROJECTS...
 * `--ask / --no-ask`: Ask confirmation before operating.  [default: ask]
 * `--ref TEXT`: Commit sha or branch name to operate with. Only available if specified
 exactly one project. If not given than project branch is used.
+* `-v, --verbose`: Show additional information.
 * `--help`: Show this message and exit.

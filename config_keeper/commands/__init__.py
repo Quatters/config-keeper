@@ -3,7 +3,7 @@ import typing as t
 
 import typer
 
-from config_keeper.commands.common import autocompletion, sync
+from config_keeper.commands.common import autocompletion, helps, sync
 from config_keeper.commands.config import cli as config_cli
 from config_keeper.commands.paths import cli as paths_cli
 from config_keeper.commands.project import cli as project_cli
@@ -65,6 +65,10 @@ def push(
         t.Optional[str],  # noqa: UP007
         typer.Option(help=ref_help),
     ] = None,
+    verbose: t.Annotated[
+        bool,
+        typer.Option('--verbose', '-v', help=helps.verbose),
+    ] = False,
 ):
     """
     Push files or directories of projects to their repositories. This operation
@@ -81,7 +85,7 @@ def push(
         conf['projects'][projects[0]]['branch'] = ref
 
     sync.handle_push_ask(projects, conf, ask=ask)
-    sync.operate('push', projects, conf)
+    sync.operate('push', projects, conf, verbose)
 
 
 @cli.command()
@@ -98,6 +102,10 @@ def pull(
         t.Optional[str],  # noqa: UP007
         typer.Option(help=ref_help),
     ] = None,
+    verbose: t.Annotated[
+        bool,
+        typer.Option('--verbose', '-v', help=helps.verbose),
+    ] = False,
 ):
     """
     Pull all files and directories of projects from their repositories and move
@@ -115,4 +123,4 @@ def pull(
         conf['projects'][projects[0]]['branch'] = ref
 
     sync.handle_pull_ask(projects, conf, ask=ask)
-    sync.operate('pull', projects, conf)
+    sync.operate('pull', projects, conf, verbose)

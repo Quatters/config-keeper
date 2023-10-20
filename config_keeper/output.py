@@ -1,8 +1,10 @@
-from rich.console import Console
+from rich.columns import Columns
+from rich.console import Console, RenderableType
 from rich.highlighter import (
     ReprHighlighter,
     _combine_regex,  # pyright: ignore [reportPrivateUsage]
 )
+from rich.panel import Panel
 
 
 class DefaultHighlighter(ReprHighlighter):
@@ -27,8 +29,9 @@ class DefaultHighlighter(ReprHighlighter):
     ]
 
 
-console = Console(highlighter=DefaultHighlighter())
-errconsole = Console(highlighter=DefaultHighlighter(), stderr=True)
+highlighter = DefaultHighlighter()
+console = Console(highlighter=highlighter)
+errconsole = Console(highlighter=highlighter, stderr=True)
 
 
 def print_project_saved(project: str):
@@ -36,20 +39,28 @@ def print_project_saved(project: str):
 
 
 def print_warning(msg: str):
-    errconsole.print('Warning:', end=' ', style='yellow')
-    errconsole.print(msg)
+    errconsole.print(f'[yellow]Warning:[/yellow] {msg}')
 
 
 def print_error(msg: str):
-    errconsole.print('Error:', end=' ', style='red')
-    errconsole.print(msg)
+    errconsole.print(f'[red]Error:[/red] {msg}')
 
 
 def print_critical(msg: str):
-    errconsole.print('Critical:', end=' ', style='violet')
-    errconsole.print(msg)
+    errconsole.print(f'[violet]Critical:[/violet] {msg}')
 
 
 def print_tip(msg: str):
-    console.print('Tip:', end=' ', style='yellow')
-    console.print(msg)
+    console.print(f'[yellow]Tip:[/yellow] {msg}')
+
+
+def format_panel_columns(d: dict[str, str]) -> RenderableType:
+    columns: list[RenderableType] = []
+    for key, output in d.items():
+        columns.append(Panel(
+            output,
+            title=key,
+            title_align='left',
+            highlight=True,
+        ))
+    return Columns(columns, expand=True)
