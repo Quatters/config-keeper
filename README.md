@@ -52,7 +52,7 @@ using ``validate`` command after
 
 ### Using pipx (recommended)
 
-[Install ``pipx``](https://pypa.github.io/pipx/installation/) first.
+Install [``pipx``](https://pypa.github.io/pipx/installation/) first.
 
 ```shell
 pipx install config-keeper2
