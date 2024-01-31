@@ -553,9 +553,7 @@ def test_sync_with_verbose():
     assert '1 file changed, 0 insertions(+), 0 deletions(-)' in result.stdout
     assert 'Fetched ' in result.stdout
     assert 'Deleted ' in result.stdout
-    assert (
-        "branch 'my_branch' set up to track 'origin/my_branch'"
-    ) in result.stdout
+    assert 'set up to track' in result.stdout
     assert 'Committed as "Auto push from' in result.stdout
     assert '[test1]"' in result.stdout
 

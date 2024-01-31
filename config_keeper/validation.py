@@ -19,7 +19,7 @@ TYPENAME: dict[type, str] = {
 }
 
 
-path_name_regex = re.compile(r'^[\w-]+$')
+path_name_regex = re.compile(r'^[\w\-_\. ]+$')
 path_regex = re.compile(r'^[\w\/~\-\. ]+$')
 
 

@@ -1,6 +1,7 @@
 import re
 
 from config_keeper import config, settings
+from config_keeper.validation import path_name_regex
 
 from tests.helpers import create_dir, create_file, create_repo, invoke
 
@@ -241,3 +242,10 @@ def test_oserror_for_config_file():
     result = invoke(['config', 'validate'])
     assert result.exit_code == 255
     assert 'Permission denied' in result.stderr
+
+
+def test_path_name_regex():
+    assert bool(path_name_regex.match('some_file.py'))
+    assert bool(path_name_regex.match('some-file.py'))
+    assert bool(path_name_regex.match('somefile.ext.another_ext'))
+    assert bool(path_name_regex.match('Check space.works'))
